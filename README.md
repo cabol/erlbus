@@ -26,7 +26,9 @@ Note
 
 **ErlBus** has 3 dependencies: `gproc`, `poolboy` and `riak_core`. But the last one `riak_core` is fetched
 on-demand, when you want to run **ErlBus** in distributed mode, inheriting all `riak_core` benefits.
-Learn more about [Riak Core](https://github.com/basho/riak_core). In this scenario, **ErlBus** runs
+Learn more about [Riak Core](https://github.com/basho/riak_core).
+
+In this scenario, **ErlBus** runs
 with `gproc` locally on each node, and `riak_core` on top of it, managing the cluster and task/command
 distribution.
 
@@ -108,7 +110,7 @@ Now, let's make it more fun, start two Erlang consoles, first one:
 
 The second one:
 
-    $ erl -name node1@127.0.0.1 -setcookie ebus -pa ebin deps/*/ebin
+    $ erl -name node2@127.0.0.1 -setcookie ebus -pa ebin deps/*/ebin
 
 Then what we need to do is put these Erlang nodes in cluster, so from any of them send a ping
 to the other:
@@ -253,7 +255,7 @@ Now `node1` and `node2` are in cluster. From here is the same as previous exampl
 Running Tests
 -------------
 
-    % make test
+    $ make test
 
 
 Building Edoc

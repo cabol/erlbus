@@ -52,42 +52,52 @@ Once into the erlang console:
 
 ```erlang
 % Start ebus
-application:start(ebus).
+> application:start(ebus).
 ok
+
+% Create anonymous function to be invoked by handlers
+> F = fun(Topic, Msg) -> io:format("Topic: ~p - Msg: ~p~n", [Topic, Msg]) end.
+#Fun<erl_eval.12.90072148>
+
 % Create anonymous handlers
-F = fun(Topic, Msg) -> io:format("Topic: ~p - Msg: ~p~n", [Topic, Msg]) end.
-#Fun<erl_eval.12.90072148>
-MH1 = ebus_handler:new_anonymous(F).
+> MH1 = ebus_handler:new_anonymous(F).
 <0.50.0>
-MH2 = ebus_handler:new_anonymous(F).
+> MH2 = ebus_handler:new_anonymous(F).
 <0.52.0>
+
 % Subscribe tw0 of them to topic t1
-ebus:sub(t1, MH1).
+> ebus:sub(t1, MH1).
 ok
-ebus:sub(t1, MH2).
+> ebus:sub(t1, MH2).
 ok
+
 % Let's publish a message to 't1'
-ebus:pub(t1, "Hello!").
+> ebus:pub(t1, "Hello!").
 Topic: t1 - Msg: "Hello!"
 Topic: t1 - Msg: "Hello!"
 ok
+
 % Another handler
-F2 = fun(Topic, Msg) -> io:format("OTHER -- Topic: ~p - Msg: ~p~n", [Topic, Msg]) end.
+> F2 = fun(Topic, Msg) -> io:format("OTHER -- Topic: ~p - Msg: ~p~n", [Topic, Msg]) end.
 #Fun<erl_eval.12.90072148>
-MH3 = ebus_handler:new_anonymous(F2).
+> MH3 = ebus_handler:new_anonymous(F2).
 <0.54.0>
+
 % Subscribe the other handler 'MH3' to t2
-ebus:sub(t2, MH3).
+> ebus:sub(t2, MH3).
 ok
+
 % Publish to 't2'
-ebus:pub(t2, "Hello other!").
+> ebus:pub(t2, "Hello other!").
 OTHER -- Topic: t2 - Msg: "Hello other!"
 ok
+
 % Unsubscribe 'MH2' from t1
-ebus:unsub(t1, MH2).
+> ebus:unsub(t1, MH2).
 ok
+
 % Publish again to 't1'
-ebus:pub(t1, "Hello again!").
+> ebus:pub(t1, "Hello again!").
 Topic: t1 - Msg: "Hello again!"
 ok
 ```
@@ -105,7 +115,7 @@ to the other:
 
 ```erlang
 % From node1 ping node2
-net_adm:ping('node2@127.0.0.1').
+> net_adm:ping('node2@127.0.0.1').
 pong
 ```
 
@@ -114,7 +124,7 @@ So, let's repeat the above exercise but now in two nodes. In both nodes start `e
 
 ```erlang
 % Start ebus
-application:start(ebus).
+> application:start(ebus).
 ok
 ```
 
@@ -122,10 +132,11 @@ Then in `node1` create a handler with subscribe it to a topic:
 
 ```erlang
 % Anonymous handler function
-F = fun(Topic, Msg) -> io:format("Topic: ~p - Msg: ~p~n", [Topic, Msg]) end.
+> F = fun(Topic, Msg) -> io:format("Topic: ~p - Msg: ~p~n", [Topic, Msg]) end.
 #Fun<erl_eval.12.90072148>
+
 % Subscribe a handler
-ebus:sub(t1, ebus_handler:new_anonymous(F)).
+> ebus:sub(t1, ebus_handler:new_anonymous(F)).
 ok
 ```
 
@@ -136,7 +147,7 @@ any node:
 
 ```erlang
 % Publish message
-ebus:pub(t1, "Hi!").
+> ebus:pub(t1, "Hi!").
 Topic: t1 - Msg: "Hi!"
 ok
 ```
@@ -178,18 +189,21 @@ Once you have compiled your module(s) and started an Erlang console:
 
 ```erlang
 % Start ebus
-application:start(ebus).
+> application:start(ebus).
 ok
+
 % Create a new handler
-MH1 = ebus_handler:new(my_handler).
+> MH1 = ebus_handler:new(my_handler).
 <0.49.0>
+
 % From here, everything is the same as previous example
 % Subscribe the handler to some topic
-ebus:sub(my_topic, MH1).
+> ebus:sub(my_topic, MH1).
 ok
+
 % Now the handler is ready to receive and process messages
 % Publish a message/event
-ebus:pub(my_topic, "Hello!").
+> ebus:pub(my_topic, "Hello!").
 ok
 ```
 
@@ -228,7 +242,7 @@ Add `node2` to cluster using node1:
 
 ```erlang
 % From node2:
-ebus_dist_console:join(["node1@127.0.0.1"]).
+> ebus_dist_console:join(["node1@127.0.0.1"]).
 Sent join request to node1@127.0.0.1
 ok
 ```

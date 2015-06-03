@@ -1,0 +1,13 @@
+{application, ebus,
+ [
+  {description, "Erlang Message Event Bus"},
+  {vsn, "0.1.0"},
+  {id, "git"},
+  {modules, []},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {mod, {ebus_app, []}},
+  {env, []},
+  {start_phases, [{start_providers, []}]}
+ ]
+}.

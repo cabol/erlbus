@@ -214,6 +214,31 @@ and now you have `ebus` running in distributed fashion, it's extremely easy, you
 anything at all.
 
 
+Task Executors (worker pool)
+----------------------------
+
+Suppose now that you have a handler that takes a while processing each message/event, so it will
+be blocked until complete the task, and for some scenarios would be unthinkable. Therefore,
+`ebus_handler` module gives you the option to create a pool of workers attached to your handler,
+and is totally transparent to you.
+
+```erlang
+% Start ebus
+application:start(ebus).
+ok
+
+% Create a handler with a worker pool (3 workers)
+HandlerPool = ebus_handler:new_pool(my_pool_1, 3, my_handler).
+<0.49.0>
+
+% And that's it, now the load will be distributed among the workers
+% From here everything is as previously
+% Finally, let's subscribe this new handler with workers to some topic
+ebus:sub(my_topic, HandlerPool).
+ok
+```
+
+
 ErlBus with Riak Core and Gproc local
 -------------------------------------
 

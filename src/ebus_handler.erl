@@ -54,15 +54,15 @@
 -type pool_opt()   :: {name, atom()} | {size, integer()}.
 -type option()     :: {monitors, [pid()]} | {pool, [pool_opt()]}.
 -type options()    :: [option()].
--type handle_fun() :: fun((ebus:topic(), ebus:message()) -> ok).
+-type handle_fun() :: fun((ebus:topic(), ebus:payload()) -> ok).
 
 %%%===================================================================
 %%% Callback API
 %%%===================================================================
 
-%% @doc This function handles incoming events/messages.
--callback handle_msg(Event, Context) -> Response when
-  Event    :: ebus:event(),
+%% @doc This function handles incoming messages/events.
+-callback handle_msg(Message, Context) -> Response when
+  Message  :: ebus:message(),
   Context  :: context(),
   Response :: any().
 

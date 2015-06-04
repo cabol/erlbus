@@ -48,7 +48,7 @@ unsub(Topic, Handler) ->
   gproc_lib:remove_reg(Key, Handler, unreg),
   ok.
 
--spec pub(ebus:topic(), ebus:message()) -> ok.
+-spec pub(ebus:topic(), ebus:payload()) -> ok.
 pub(Topic, Message) ->
   gproc:send({p, l, {?MODULE, Topic}}, {ebus, {Topic, Message}}),
   ok.
@@ -64,7 +64,7 @@ get_topics() ->
   L = [N || [N] <- ets:match(gproc, Pattern)],
   ebus_util:rem_dups_from_list(L).
 
--spec dispatch(ebus:topic(), ebus:message(), ebus:handler()) -> ok.
+-spec dispatch(ebus:topic(), ebus:payload(), ebus:handler()) -> ok.
 dispatch(Topic, Message, Handler) ->
   Handler ! {ebus, {Topic, Message}},
   ok.

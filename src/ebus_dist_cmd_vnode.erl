@@ -78,9 +78,7 @@ start_vnode(I) ->
 %% <code>reg|unreg|send|sub|unsub|pub</code>
 %% <br/>
 %% <li>PrefList: Riak Core preflist.</li>
-%% <li>ReqId: Request id so the caller can verify the response.</li>
-%% <li>Ref: Unique reference to the GS that will be created.</li>
-%% <li>Key: Key which the GS will be registered.</li>
+%% <li>Identity: Any value to identify the command.</li>
 %% <li>CallbackSpec: Callback specification. This will applied when
 %% messages arrives. If `Mod' is `none', the callback will be treated
 %% as a fun.</li>

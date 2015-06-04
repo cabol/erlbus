@@ -52,8 +52,8 @@
 %% ebus types
 -type cmd()      :: sub | unsub | pub | dispatch | get_subscribers | get_topics.
 -type topic()    :: any().
--type message()  :: any().
--type event()    :: {topic(), message()}.
+-type payload()  :: any().
+-type message()  :: {topic(), payload()}.
 -type handler()  :: pid().
 -type callback() :: {Module :: module(), Function :: atom(), Args :: [any()]}.
 -type reason()   :: no_such_topic | no_handler | internal.
@@ -62,8 +62,8 @@
 %% Exported types
 -export_type([cmd/0,
               topic/0,
+              payload/0,
               message/0,
-              event/0,
               handler/0,
               callback/0,
               ebus_ret/0]).
@@ -114,7 +114,7 @@
 %% @doc Sends the `Message` to all subscribers of the `Topic`.
 -callback pub(Topic, Message) -> Response when
   Topic    :: topic(),
-  Message  :: message(),
+  Message  :: payload(),
   Response :: ebus_ret().
 
 %% @doc Returns a list with all subscribers to the `Topic`.
@@ -129,7 +129,7 @@
 %% @doc Sends the `Message` to `Handler`, which is subscribed to `Topic`.
 -callback dispatch(Topic, Message, Handler) -> Response when
   Topic    :: topic(),
-  Message  :: message(),
+  Message  :: payload(),
   Handler  :: handler(),
   Response :: ebus_ret().
 
@@ -183,11 +183,11 @@ unsub(Topic, Handler) ->
 unsub(Name, Topic, Handler) ->
   gen_server:call(Name, {unsub, Topic, Handler}).
 
--spec pub(topic(), message()) -> ebus_ret().
+-spec pub(topic(), payload()) -> ebus_ret().
 pub(Topic, Message) ->
   gen_server:call(?SERVER, {pub, Topic, Message}).
 
--spec pub(name(), topic(), message()) -> ebus_ret().
+-spec pub(name(), topic(), payload()) -> ebus_ret().
 pub(Name, Topic, Message) ->
   gen_server:call(Name, {pub, Topic, Message}).
 
@@ -207,11 +207,11 @@ get_topics() ->
 get_topics(Name) ->
   gen_server:call(Name, get_topics).
 
--spec dispatch(topic(), message(), handler()) -> ebus_ret().
+-spec dispatch(topic(), payload(), handler()) -> ebus_ret().
 dispatch(Topic, Message, Handler) ->
   gen_server:call(?SERVER, {dispatch, Topic, Message, Handler}).
 
--spec dispatch(name(), topic(), message(), handler()) -> ebus_ret().
+-spec dispatch(name(), topic(), payload(), handler()) -> ebus_ret().
 dispatch(Name, Topic, Message, Handler) ->
   gen_server:call(Name, {dispatch, Topic, Message, Handler}).
 

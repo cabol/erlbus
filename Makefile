@@ -1,6 +1,6 @@
 PROJECT = ebus
 
-CONFIG ?= test/config/test.config
+CONFIG ?= test/test.config
 
 ifdef EBUS_DIST
 DEPS = gproc poolboy riak_core

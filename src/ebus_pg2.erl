@@ -58,7 +58,7 @@ unsub(Topic, Handler) ->
       ok
   end.
 
--spec pub(ebus:topic(), ebus:message()) -> ok.
+-spec pub(ebus:topic(), ebus:payload()) -> ok.
 pub(Topic, Msg) ->
   Pids = get_subscribers(Topic),
   lists:foreach(fun(Pid) -> Pid ! {ebus, {Topic, Msg}} end, Pids).
@@ -77,7 +77,7 @@ get_subscribers(Topic) ->
 get_topics() ->
   pg2:which_groups().
 
--spec dispatch(ebus:topic(), ebus:message(), ebus:handler()) -> ok.
+-spec dispatch(ebus:topic(), ebus:payload(), ebus:handler()) -> ok.
 dispatch(Topic, Msg, Handler) ->
   Handler ! {ebus, {Topic, Msg}},
   ok.

@@ -130,7 +130,7 @@ application:start(ebus).
 ok
 ```
 
-Then in `node1` create a handler with subscribe it to a topic:
+Then in `node1` create a handler and subscription to a topic:
 
 ```erlang
 % Anonymous handler function
@@ -172,6 +172,15 @@ in case of any demo o simple test. But the right way would be create your own me
 the `ebus_handler` beahvior. Because in this way, your handler will be part of the supervision tree,
 and you will be able to use other features too, that we'll cover later.
 
+First, we have to create an Erlang module to implement the behavior `ebus_handler`, which defines a
+callback to handling message logic: `handle_msg({Topic, Payload}, Context)`, where:
+
+- `Topic` is the topic/channel where message comes from.
+- `Payload` is the message itself, the content af what you published or dispatched.
+- `Context` is an optional parameter that you can pass in the moment of the handler creation,
+   and you want to be able to recovered at the moment of the `handle_msg` invocation.
+
+
 ### my_handler.erl
 
 ```erlang
@@ -194,8 +203,10 @@ Once you have compiled your module(s) and started an Erlang console:
 application:start(ebus).
 ok
 
-% Create a new handler
-MH1 = ebus_handler:new(my_handler).
+% Create a new handler, passing a context as argument
+% In this the context is a simple binary string with the name of the handler,
+% but it can be anything that you want (tuple, record, map, etc.)
+MH1 = ebus_handler:new(my_handler, <<"MH1">>).
 <0.49.0>
 
 % From here, everything is the same as previous example

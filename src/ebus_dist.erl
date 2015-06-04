@@ -88,11 +88,11 @@ unsub(Topic, Handler, Opts) ->
   Callback = {ebus_gproc, unsub, [Topic, Handler]},
   do_write(Topic, Topic, unsub, Callback, Opts).
 
--spec pub(ebus:topic(), ebus:message()) -> ebus:ebus_ret().
+-spec pub(ebus:topic(), ebus:payload()) -> ebus:ebus_ret().
 pub(Topic, Message) ->
   pub(Topic, Message, []).
 
--spec pub(ebus:topic(), ebus:message(), options()) -> ebus:ebus_ret().
+-spec pub(ebus:topic(), ebus:payload(), options()) -> ebus:ebus_ret().
 pub(Topic, Message, Opts) ->
   Callback = {ebus_gproc, pub, [Topic, Message]},
   do_write(Topic, Topic, pub, Callback, Opts).
@@ -116,13 +116,13 @@ get_topics(Opts) ->
   do_write(undefined, undefined, get_topics, Callback, Opts).
 
 -spec dispatch(
-  ebus:topic(), ebus:message(), ebus:handler()
+  ebus:topic(), ebus:payload(), ebus:handler()
 ) -> ebus:ebus_ret().
 dispatch(Topic, Message, Handler) ->
   dispatch(Topic, Message, Handler, []).
 
 -spec dispatch(
-  ebus:topic(), ebus:message(), ebus:handler(), options()
+  ebus:topic(), ebus:payload(), ebus:handler(), options()
 ) -> ebus:ebus_ret().
 dispatch(Topic, Message, Handler, Opts) ->
   Callback = {ebus_gproc, dispatch, [Topic, Message, Handler]},

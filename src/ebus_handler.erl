@@ -31,8 +31,8 @@
 -export([start_link/3]).
 -export([new/1, new/2, new/3, delete/1]).
 -export([new_pool/3, new_pool/4, new_pool/5]).
--export([new_anonymous/1, anonymous_handler/1]).
 -export([get_module/1, get_context/1]).
+-export([new_anonymous/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -113,20 +113,6 @@ new_pool(Name, Size, Module, Context, Opts) ->
   {ok, Pool} = poolboy:start_link(PoolArgs, [Module, Context]),
   new(Module, Context, [{pool, Pool} | Opts]).
 
--spec new_anonymous(handle_fun()) -> ebus:handler().
-new_anonymous(Fun) ->
-  spawn_link(?MODULE, anonymous_handler, [Fun]).
-
--spec anonymous_handler(handle_fun()) -> ebus:handler().
-anonymous_handler(Fun) ->
-  receive
-    {ebus, {Topic, Msg}} ->
-      Fun(Topic, Msg),
-      anonymous_handler(Fun);
-    exit ->
-      ok
-  end.
-
 -spec get_module(ebus:handler()) -> any().
 get_module(Handler) ->
   gen_server:call(Handler, get_mod).
@@ -134,6 +120,10 @@ get_module(Handler) ->
 -spec get_context(ebus:handler()) -> any().
 get_context(Handler) ->
   gen_server:call(Handler, get_ctx).
+
+-spec new_anonymous(handle_fun()) -> ebus:handler().
+new_anonymous(Fun) ->
+  spawn_link(fun() -> anonymous_handler(Fun) end).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -196,3 +186,13 @@ parse_options([{pool, Pool} | Opts], State) ->
   parse_options(Opts, State#state{pool = Pool});
 parse_options([{_, _} | Opts], State) ->
   parse_options(Opts, State).
+
+%% @private
+anonymous_handler(Fun) ->
+  receive
+    {ebus, {Topic, Msg}} ->
+      Fun(Topic, Msg),
+      anonymous_handler(Fun);
+    exit ->
+      ok
+  end.

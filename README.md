@@ -14,7 +14,7 @@ See also: [WEST](https://github.com/cabol/west).
 Building ErlBus
 ---------------
 
-Assuming you have a working Erlang installation (recommended 17 or later), building **Erlbus** should be as simple as:
+Assuming you have a working Erlang installation (recommended 17 or later), building **ErlBus** should be as simple as:
 
     $ git clone https://github.com/cabol/erlbus.git
     $ cd erlbus
@@ -103,6 +103,11 @@ ebus:pub(t1, "Hello again!").
 Topic: t1 - Msg: "Hello again!"
 ok
 ```
+
+> **Note:**
+
+> - You may have noticed that is not necessary additional steps/calls to create/delete a topic,
+    this is automatically handled by `ebus`, so you don't worry about it!
 
 Now, let's make it more fun, start two Erlang consoles, first one:
 
@@ -276,7 +281,7 @@ ok
 
 > **Note:**
 
-> - The example above, assumes that you're working with the previous compiled handler `my_hanlder.erl`.
+> The example above, assumes that you're working with the previous compiled handler `my_hanlder.erl`.
 
 
 Task Executors (worker pool)
@@ -303,15 +308,22 @@ ebus:sub(my_topic, HandlerPool).
 ok
 ```
 
+> **Note:**
+
+> Another way to get a point-to-point behavior is using the native pub/sub functions and
+  task executors. The idea is to have just one handler with a pool of workers subscribed
+  to one topic. So all published messages to that topic will be processed only by one
+  worker attached to the handler (since there is only one subscribed handler).
+
 
 ErlBus with Riak Core and Gproc local
 -------------------------------------
 
-**ErlBus** is distributed by default, inherits all properties of Distributed Erlang and [PG2](http://erlang.org/doc/man/pg2.html).
-But `pg2` has some limitations, distribution model is with full replication, which can cause problem when
-we have a considerable amount of subscribers, and at the same time the amount of messages sent is too high.
-So for these scenarios **ErlBus** provides another option: `ebus_dist`, which is built on top of `riak_core`
-and `gproc`.
+**ErlBus** is distributed by default, inherits all properties of [Distributed Erlang](http://www.erlang.org/doc/reference_manual/distributed.html)
+and [`pg2`](http://erlang.org/doc/man/pg2.html). But `pg2` has some limitations, distribution model
+works with full replication, which can cause problem when we have a considerable amount of subscribers,
+and at the same time the amount of messages sent is too high. So for these scenarios **ErlBus** provides
+another option: `ebus_dist`, which is built on top of `riak_core` and `gproc`.
 
 To start `ebus_dist`, you must invoke `erl` with: `-ebus ebus_dist all`, and with a configuration file (with
 `riak_core` config): `-config your_config_file.config` (you can use files located in `config/*.config`).

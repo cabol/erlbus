@@ -281,7 +281,7 @@ ok
 
 > **Note:**
 
-> The example above, assumes that you're working with the previous compiled handler `my_hanlder.erl`.
+> - The example above, assumes that you're working with the previous compiled handler `my_hanlder.erl`.
 
 
 Task Executors (worker pool)
@@ -310,10 +310,10 @@ ok
 
 > **Note:**
 
-> Another way to get a point-to-point behavior is using the native pub/sub functions and
-  task executors. The idea is to have just one handler with a pool of workers subscribed
-  to one topic. So all published messages to that topic will be processed only by one
-  worker attached to the handler (since there is only one subscribed handler).
+> - Another way to get a point-to-point behavior is using the native pub/sub functions and
+    task executors. The idea is to have just one handler with a pool of workers subscribed
+    to one topic. So all published messages to that topic will be processed only by one
+    worker attached to the handler (since there is only one subscribed handler).
 
 
 ErlBus with Riak Core and Gproc local

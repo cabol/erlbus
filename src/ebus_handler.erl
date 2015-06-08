@@ -33,6 +33,7 @@
 -export([new_pool/3, new_pool/4, new_pool/5]).
 -export([get_module/1, get_context/1]).
 -export([new_anonymous/1]).
+-export([status/1]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -55,6 +56,8 @@
 -type option()     :: {monitors, [pid()]} | {pool, [pool_opt()]}.
 -type options()    :: [option()].
 -type handle_fun() :: fun((ebus:topic(), ebus:payload()) -> ok).
+-type status()     :: exiting | garbage_collecting | waiting | running |
+                      runnable | suspended.
 
 %%%===================================================================
 %%% Callback API
@@ -124,6 +127,10 @@ get_context(Handler) ->
 -spec new_anonymous(handle_fun()) -> ebus:handler().
 new_anonymous(Fun) ->
   spawn_link(fun() -> anonymous_handler(Fun) end).
+
+-spec status(ebus:handler()) -> undefined | {status, status()}.
+status(Handler) ->
+  process_info(Handler, status).
 
 %%%===================================================================
 %%% gen_server callbacks

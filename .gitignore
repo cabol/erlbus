@@ -6,6 +6,7 @@ deps
 *.plt
 erl_crash.dump
 .erlang.mk.*
+.erlang.mk
 .idea
 .DS_Store
 ._*
@@ -13,7 +14,6 @@ _*
 *~
 *.iml
 priv/data/*
-rel/ebuzz
 _rel
 dev
 log

@@ -14,33 +14,33 @@
 %% API.
 
 start() ->
-	application:ensure_all_started(pub_sub).
+  application:ensure_all_started(pub_sub).
 
 start(_Type, _Args) ->
-	P = spawn_link(fun () -> publisher(?TOPIC) end),
-	lists:foreach(fun(N) -> subscriber(?TOPIC, N) end, lists:seq(1, 3)),
-	timer:sleep(1*60*1000),
-	exit(P, kill),
-	teardown_ebus().
+  P = spawn_link(fun() -> publisher(?TOPIC) end),
+  lists:foreach(fun(N) -> subscriber(?TOPIC, N) end, lists:seq(1, 3)),
+  timer:sleep(1 * 60 * 1000),
+  exit(P, kill),
+  teardown_ebus().
 
 stop() ->
-	application:stop(pub_sub).
+  application:stop(pub_sub).
 
 stop(_State) ->
-	ok.
+  ok.
 
 %% Internals
 
 publisher(Topic) ->
-	timer:sleep(500),
-	Payload = now(),
-	io:format("Publish: ~p~n", [Payload]),
-	ebus:pub(Topic, Payload),
-	publisher(Topic).
+  timer:sleep(500),
+  Payload = now(),
+  io:format("Publish: ~p~n", [Payload]),
+  ebus:pub(Topic, Payload),
+  publisher(Topic).
 
 subscriber(Topic, N) ->
-	Handler = ebus_handler:new(?HANDLER, N),
-	ebus:sub(Topic, Handler).
+  Handler = ebus_handler:new(?HANDLER, N),
+  ebus:sub(Topic, Handler).
 
 teardown_ebus() ->
-	application:stop(ebus).
+  application:stop(ebus).

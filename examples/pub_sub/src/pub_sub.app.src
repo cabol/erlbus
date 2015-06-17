@@ -2,18 +2,18 @@
 
 {application, pub_sub,
  [
-	{description, "ErlBus Pub/Sub example."},
-	{vsn, "1"},
-	{modules, []},
-	{registered, []},
-	{applications,
-	 [
-	  kernel,
-	  stdlib,
-	  ebus
-	 ]
+  {description, "ErlBus Pub/Sub example."},
+  {vsn, "1"},
+  {modules, []},
+  {registered, []},
+  {applications,
+   [
+    kernel,
+    stdlib,
+    ebus
+   ]
 	},
-	{mod, {pub_sub, []}},
-	{env, []}
+  {mod, {pub_sub, []}},
+  {env, []}
  ]
 }.

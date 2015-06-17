@@ -378,6 +378,12 @@ ok
 Now `node1` and `node2` are in cluster. From here is the same as previous examples.
 
 
+Examples
+--------
+
+See [examples](./examples).
+
+
 Running Tests
 -------------
 

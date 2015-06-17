@@ -9,5 +9,5 @@
 -export([handle_msg/2]).
 
 handle_msg({Topic, Msg}, Context) ->
-	io:format("[Pid: ~p][Topic: ~p][Msg: ~p][Ctx: ~p]~n",
-						[self(), Topic, Msg, Context]).
+  io:format("[Pid: ~p][Topic: ~p][Msg: ~p][Ctx: ~p]~n",
+            [self(), Topic, Msg, Context]).

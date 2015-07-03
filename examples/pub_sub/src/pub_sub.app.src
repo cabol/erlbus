@@ -12,7 +12,7 @@
     stdlib,
     ebus
    ]
-	},
+  },
   {mod, {pub_sub, []}},
   {env, []}
  ]

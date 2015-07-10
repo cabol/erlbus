@@ -29,42 +29,42 @@
 
 %% API
 -export([sub/2, unsub/2, pub/2]).
--export([get_subscribers/1, get_topics/0]).
+-export([get_subscribers/1, get_channels/0]).
 -export([dispatch/3]).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
--spec sub(ebus:topic(), ebus:handler()) -> ok.
-sub(Topic, Handler) ->
-  Key = {p, l, {?MODULE, Topic}},
+-spec sub(ebus:channel(), ebus:handler()) -> ok.
+sub(Channel, Handler) ->
+  Key = {p, l, {?MODULE, Channel}},
   gproc_lib:insert_reg(Key, gproc:default(Key), Handler, l),
   ok.
 
--spec unsub(ebus:topic(), ebus:handler()) -> ok.
-unsub(Topic, Handler) ->
-  Key = {p, l, {?MODULE, Topic}},
+-spec unsub(ebus:channel(), ebus:handler()) -> ok.
+unsub(Channel, Handler) ->
+  Key = {p, l, {?MODULE, Channel}},
   gproc_lib:remove_reg(Key, Handler, unreg),
   ok.
 
--spec pub(ebus:topic(), ebus:payload()) -> ok.
-pub(Topic, Message) ->
-  gproc:send({p, l, {?MODULE, Topic}}, {ebus, {Topic, Message}}),
+-spec pub(ebus:channel(), ebus:payload()) -> ok.
+pub(Channel, Message) ->
+  gproc:send({p, l, {?MODULE, Channel}}, {ebus, {Channel, Message}}),
   ok.
 
--spec get_subscribers(ebus:topic()) -> [ebus:handler()].
-get_subscribers(Topic) ->
-  Key = {p, l, {?MODULE, Topic}},
+-spec get_subscribers(ebus:channel()) -> [ebus:handler()].
+get_subscribers(Channel) ->
+  Key = {p, l, {?MODULE, Channel}},
   gproc:lookup_pids(Key).
 
--spec get_topics() -> [ebus:topic()].
-get_topics() ->
+-spec get_channels() -> [ebus:channel()].
+get_channels() ->
   Pattern = {{{p, l, {?MODULE, '$1'}}, '_'}, '_', '_'},
   L = [N || [N] <- ets:match(gproc, Pattern)],
   ebus_util:rem_dups_from_list(L).
 
--spec dispatch(ebus:topic(), ebus:payload(), ebus:handler()) -> ok.
-dispatch(Topic, Message, Handler) ->
-  Handler ! {ebus, {Topic, Message}},
+-spec dispatch(ebus:channel(), ebus:payload(), ebus:handler()) -> ok.
+dispatch(Channel, Message, Handler) ->
+  Handler ! {ebus, {Channel, Message}},
   ok.

@@ -80,21 +80,21 @@ ebus_pub_sub(_Config) ->
   MH3 = ebus_handler:new(?HANDLER, <<"MH3">>),
 
   %% Subscribe MH1 and MH2
-  ok = ebus:sub(t1, MH1),
-  ok = ebus:sub(t1, MH2),
+  ok = ebus:sub(ch1, MH1),
+  ok = ebus:sub(ch1, MH2),
 
-  %% Subscribe MH1 and MH2 to other topics
-  ok = ebus:sub(t2, MH1),
-  ok = ebus:sub(t3, MH2),
+  %% Subscribe MH1 and MH2 to other channels
+  ok = ebus:sub(ch2, MH1),
+  ok = ebus:sub(ch3, MH2),
 
   %% Check subscribers
-  2 = length(ebus:get_subscribers(t1)),
+  2 = length(ebus:get_subscribers(ch1)),
 
-  %% Check topics
-  3 = length(ebus:get_topics()),
+  %% Check channels
+  3 = length(ebus:get_channels()),
 
-  %% Publish to 't1'
-  ok = ebus:pub(t1, {<<"ID1">>, <<"Hi!">>}),
+  %% Publish to 'ch1'
+  ok = ebus:pub(ch1, {<<"ID1">>, <<"Hi!">>}),
   timer:sleep(500),
 
   %% Check arrival of messages to right handlers (MH1, MH2)
@@ -104,14 +104,30 @@ ebus_pub_sub(_Config) ->
   M12 = <<"Hi!">>,
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH3">>])),
 
+  %% Publish to 'ch2'
+  ok = ebus:pub(ch2, {<<"ID1-2">>, <<"Hi!">>}),
+  timer:sleep(500),
+  [{_, M13}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-2">>, <<"MH1">>])),
+  M13 = <<"Hi!">>,
+  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-2">>, <<"MH2">>])),
+  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-2">>, <<"MH3">>])),
+
+  %% Publish to 'ch3'
+  ok = ebus:pub(ch3, {<<"ID1-3">>, <<"Hi!">>}),
+  timer:sleep(500),
+  [{_, M14}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-3">>, <<"MH2">>])),
+  M14 = <<"Hi!">>,
+  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-3">>, <<"MH1">>])),
+  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-3">>, <<"MH3">>])),
+
   %% Subscribe MH3
-  ok = ebus:sub(t1, MH3),
+  ok = ebus:sub(ch1, MH3),
 
   %% Check subscribers
-  3 = length(ebus:get_subscribers(t1)),
+  3 = length(ebus:get_subscribers(ch1)),
 
-  %% Publish to 't1'
-  ok = ebus:pub(t1, {<<"ID2">>, <<"Hi!">>}),
+  %% Publish to 'ch1'
+  ok = ebus:pub(ch1, {<<"ID2">>, <<"Hi!">>}),
   timer:sleep(500),
 
   %% Check arrival of messages to right handlers (MH1, MH2, MH3)
@@ -122,8 +138,8 @@ ebus_pub_sub(_Config) ->
   [{_, M23}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"MH3">>])),
   M23 = <<"Hi!">>,
 
-  %% Send to 't1' and 'MH1'
-  ok = ebus:dispatch(t1, {<<"ID2-1">>, <<"Send">>}, MH1),
+  %% Send to 'ch1' and 'MH1'
+  ok = ebus:dispatch(ch1, {<<"ID2-1">>, <<"Send">>}, MH1),
   timer:sleep(500),
 
   %% Check arrival of messages to right handlers (MH1, MH2, MH3)
@@ -132,14 +148,14 @@ ebus_pub_sub(_Config) ->
   M21_2 = <<"Send">>,
 
   %% Unsubscribe MH1 and MH2
-  ok = ebus:unsub(t1, MH1),
-  ok = ebus:unsub(t1, MH2),
+  ok = ebus:unsub(ch1, MH1),
+  ok = ebus:unsub(ch1, MH2),
 
   %% Check subscribers
-  1 = length(ebus:get_subscribers(t1)),
+  1 = length(ebus:get_subscribers(ch1)),
 
-  %% Publish to 't1'
-  ok = ebus:pub(t1, {<<"ID3">>, <<"Hi!">>}),
+  %% Publish to 'ch1'
+  ok = ebus:pub(ch1, {<<"ID3">>, <<"Hi!">>}),
   timer:sleep(500),
 
   %% Check arrival of messages to right handlers (MH3)
@@ -168,14 +184,14 @@ ebus_pool(_Config) ->
   MH2 = ebus_handler:new_pool(my_pool_1, 3, ?HANDLER, <<"MH2">>),
 
   %% Subscribe MH1 and MH2
-  ok = ebus:sub(Name, t1, MH1),
-  ok = ebus:sub(Name, t1, MH2),
+  ok = ebus:sub(Name, ch1, MH1),
+  ok = ebus:sub(Name, ch1, MH2),
 
   %% Check subscribers
-  2 = length(ebus:get_subscribers(Name, t1)),
+  2 = length(ebus:get_subscribers(Name, ch1)),
 
-  %% Publish to 't1'
-  ok = ebus:pub(Name, t1, {<<"ID1">>, <<"Hi!">>}),
+  %% Publish to 'ch1'
+  ok = ebus:pub(Name, ch1, {<<"ID1">>, <<"Hi!">>}),
   timer:sleep(500),
 
   %% Check arrival of messages to right handlers (MH1, MH2)

@@ -59,7 +59,7 @@ application:start(ebus).
 ok
 
 % Create anonymous function to be invoked by handlers
-F = fun(Topic, Msg) -> io:format("Topic: ~p - Msg: ~p~n", [Topic, Msg]) end.
+F = fun(Channel, Msg) -> io:format("Channel: ~p - Msg: ~p~n", [Channel, Msg]) end.
 #Fun<erl_eval.12.90072148>
 
 % Create anonymous handlers
@@ -68,46 +68,46 @@ MH1 = ebus_handler:new_anonymous(F).
 MH2 = ebus_handler:new_anonymous(F).
 <0.52.0>
 
-% Subscribe tw0 of them to topic t1
-ebus:sub(t1, MH1).
+% Subscribe them to channel ch1
+ebus:sub(ch1, MH1).
 ok
-ebus:sub(t1, MH2).
+ebus:sub(ch1, MH2).
 ok
 
-% Let's publish a message to 't1'
-ebus:pub(t1, "Hello!").
-Topic: t1 - Msg: "Hello!"
-Topic: t1 - Msg: "Hello!"
+% Let's publish a message to 'ch1'
+ebus:pub(ch1, "Hello!").
+Channel: ch1 - Msg: "Hello!"
+Channel: ch1 - Msg: "Hello!"
 ok
 
 % Another handler
-F2 = fun(Topic, Msg) -> io:format("OTHER -- Topic: ~p - Msg: ~p~n", [Topic, Msg]) end.
+F2 = fun(Channel, Msg) -> io:format("OTHER -- Channel: ~p - Msg: ~p~n", [Channel, Msg]) end.
 #Fun<erl_eval.12.90072148>
 MH3 = ebus_handler:new_anonymous(F2).
 <0.54.0>
 
-% Subscribe the other handler 'MH3' to t2
-ebus:sub(t2, MH3).
+% Subscribe the other handler 'MH3' to ch2
+ebus:sub(ch2, MH3).
 ok
 
-% Publish to 't2'
-ebus:pub(t2, "Hello other!").
-OTHER -- Topic: t2 - Msg: "Hello other!"
+% Publish to 'ch2'
+ebus:pub(ch2, "Hello other!").
+OTHER -- Channel: ch2 - Msg: "Hello other!"
 ok
 
-% Unsubscribe 'MH2' from t1
-ebus:unsub(t1, MH2).
+% Unsubscribe 'MH2' from ch1
+ebus:unsub(ch1, MH2).
 ok
 
-% Publish again to 't1'
-ebus:pub(t1, "Hello again!").
-Topic: t1 - Msg: "Hello again!"
+% Publish again to 'ch1'
+ebus:pub(ch1, "Hello again!").
+Channel: ch1 - Msg: "Hello again!"
 ok
 ```
 
 > **Note:**
 
-> - You may have noticed that is not necessary additional steps/calls to create/delete a topic,
+> - You may have noticed that is not necessary additional steps/calls to create/delete a channel,
     this is automatically handled by `ebus`, so you don't worry about it!
 
 Now, let's make it more fun, start two Erlang consoles, first one:
@@ -136,34 +136,34 @@ application:start(ebus).
 ok
 ```
 
-Then in `node1` create a handler and subscription to a topic:
+Then in `node1` create a handler and subscription to a channel:
 
 ```erlang
 % Anonymous handler function
-F = fun(Topic, Msg) -> io:format("Topic: ~p - Msg: ~p~n", [Topic, Msg]) end.
+F = fun(Channel, Msg) -> io:format("Channel: ~p - Msg: ~p~n", [Channel, Msg]) end.
 #Fun<erl_eval.12.90072148>
 
 % Subscribe a handler
-ebus:sub(t1, ebus_handler:new_anonymous(F)).
+ebus:sub(ch1, ebus_handler:new_anonymous(F)).
 ok
 ```
 
 Repeat the same thing above in `node2`.
 
-Once you have handlers subscribed to the same topic in both nodes, publish some messages from
+Once you have handlers subscribed to the same channel in both nodes, publish some messages from
 any node:
 
 ```erlang
 % Publish message
-ebus:pub(t1, "Hi!").
-Topic: t1 - Msg: "Hi!"
+ebus:pub(ch1, "Hi!").
+Channel: ch1 - Msg: "Hi!"
 ok
 ```
 
 And in the other node you will see that message has arrived too:
 
 ```erlang
-Topic: t1 - Msg: "Hi!"
+Channel: ch1 - Msg: "Hi!"
 ok
 ```
 
@@ -179,9 +179,10 @@ the `ebus_handler` beahvior. Because in this way, your handler will be part of t
 and you will be able to use other features too, that we'll cover later.
 
 First, we have to create an Erlang module to implement the behavior `ebus_handler`, which defines a
-callback to handling message logic: `handle_msg({Topic, Payload}, Context)`, where:
+callback to handling message logic: `handle_msg({Channel, Payload}, Context)`, where:
 
-- `Topic` is the topic/channel where message comes from.
+- `Channel` is the logical mechanism that allows communicate two or more endpoints each other
+  (either Pub/Sub or Point-to-Point) through messages.
 - `Payload` is the message itself, the content af what you published or dispatched.
 - `Context` is an optional parameter that you can pass in the moment of the handler creation,
    and you want to be able to recovered at the moment of the `handle_msg` invocation.
@@ -197,9 +198,9 @@ callback to handling message logic: `handle_msg({Topic, Payload}, Context)`, whe
 %% API
 -export([handle_msg/2]).
 
-handle_msg({Topic, Msg}, Context) ->
-  io:format("[Pid: ~p][Topic: ~p][Msg: ~p][Ctx: ~p]~n",
-            [self(), Topic, Msg, Context]).
+handle_msg({Channel, Msg}, Context) ->
+  io:format("[Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n",
+            [self(), Channel, Msg, Context]).
 ```
 
 Once you have compiled your module(s) and started an Erlang console:
@@ -216,13 +217,13 @@ MH1 = ebus_handler:new(my_handler, <<"MH1">>).
 <0.49.0>
 
 % From here, everything is the same as previous example
-% Subscribe the handler to some topic
-ebus:sub(my_topic, MH1).
+% Subscribe the handler to some channel
+ebus:sub(my_channel, MH1).
 ok
 
 % Now the handler is ready to receive and process messages
 % Publish a message/event
-ebus:pub(my_topic, "Hello!").
+ebus:pub(my_channel, "Hello!").
 ok
 ```
 
@@ -238,10 +239,10 @@ The great thing here is that you don't need something special to implement a poi
 Is as simple as this:
 
 ```erlang
-ebus:dispatch(t1, "Hi!", MyHandler).
+ebus:dispatch(ch1, "Hi!", MyHandler).
 ```
 
-Instead of call `ebus:pub(Topic, Message)`, you call `ebus:dispatch(Topic, Message, Handler)`, and
+Instead of call `ebus:pub(Channel, Message)`, you call `ebus:dispatch(Channel, Message, Handler)`, and
 the only difference is that you have to provide the `Handler` which will receive the message.
 The reason of this is that you're free to implement your scheduling/dispatching strategy. Also,
 you can use `ebus_util:get_best_pid(ListOfHandlers)` to find an available handler. For example:
@@ -260,23 +261,23 @@ MH3 = ebus_handler:new(my_handler, <<"MH3">>).
 <0.49.0>
 
 %% Subscribe created handlers
-ebus:sub(my_topic, MH1).
+ebus:sub(my_channel, MH1).
 ok
-ebus:sub(my_topic, MH2).
+ebus:sub(my_channel, MH2).
 ok
-ebus:sub(my_topic, MH3).
+ebus:sub(my_channel, MH3).
 ok
 
 %% Get the subscribed handlers
-Handlers = ebus:get_subscribers(my_topic).
+Handlers = ebus:get_subscribers(my_channel).
 [<0.47.0>, <0.48.0>, <0.49.0>]
 
 %% Find an available handler
 Handler = ebus_util:get_best_pid(Handlers).
 <0.47.0>
 
-ebus:dispatch(my_topic, "Hi!", Handler).
-Topic: t1 - Msg: "Hi!"
+ebus:dispatch(my_channel, "Hi!", Handler).
+Channel: ch1 - Msg: "Hi!"
 ok
 ```
 
@@ -304,8 +305,8 @@ HandlerPool = ebus_handler:new_pool(my_pool_1, 3, my_handler).
 
 % And that's it, now the load will be distributed among the workers
 % From here everything is as previously
-% Finally, let's subscribe this new handler with workers to some topic
-ebus:sub(my_topic, HandlerPool).
+% Finally, let's subscribe this new handler with workers to some channel
+ebus:sub(my_channel, HandlerPool).
 ok
 ```
 
@@ -313,7 +314,7 @@ ok
 
 > - Another way to get a point-to-point behavior is using the native pub/sub functions and
     task executors. The idea is to have just one handler with a pool of workers subscribed
-    to one topic. So all published messages to that topic will be processed only by one
+    to one channel. So all published messages to that channel will be processed only by one
     worker attached to the handler (since there is only one subscribed handler).
 
 

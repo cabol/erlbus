@@ -211,10 +211,8 @@ waiting({ok, ReqId, Val},
   case NumQ =:= Q of
     true ->
       Reply = case lists:any(different(Val), Replies) of
-                true ->
-                  repair(Op, Replies, SD);
-                false ->
-                  Val
+                true  -> repair(Op, Replies, SD);
+                false -> Val
               end,
       From ! {ok, ReqId, Reply},
       {stop, normal, SD};
@@ -235,25 +233,21 @@ different(A) -> fun(B) -> A =/= B end.
 %% @private
 repair(get_subscribers, Replies, _State) ->
   max_size_list(Replies);
-repair(get_topics, Replies, _State) ->
+repair(get_channels, Replies, _State) ->
   MergedList = merge_lists(Replies),
   ebus_util:rem_dups_from_list(MergedList);
 repair(_Op, Replies, #state{q = Q}) ->
   case ebus_util:count_val_in_list(ok, Replies) >= round(Q/2) of
-    true ->
-      ok;
-    false ->
-      {error, quorum_reconciliation_failed}
+    true  -> ok;
+    false -> {error, quorum_reconciliation_failed}
   end.
 
 %% @private
 max_size_list(L) ->
   F = fun(E, Acc) ->
         case length(E) > length(Acc) of
-          true ->
-            E;
-          false ->
-            Acc
+          true  -> E;
+          false -> Acc
         end
       end,
   lists:foldl(F, [], L).

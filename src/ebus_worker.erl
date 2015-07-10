@@ -65,10 +65,10 @@ handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
 %% @hidden
-handle_cast({handle_msg, {Topic, Msg}, Pool},
+handle_cast({handle_msg, {Channel, Msg}, Pool},
             #state{module = Mod, context = Ctx} = State) ->
   try
-    Mod:handle_msg({Topic, Msg}, Ctx)
+    Mod:handle_msg({Channel, Msg}, Ctx)
   after
     poolboy:checkin(Pool, self())
   end,

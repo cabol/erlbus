@@ -29,12 +29,12 @@
 
 %% API
 -export([sub/2, unsub/2, pub/2]).
--export([get_subscribers/1, get_topics/0]).
+-export([get_subscribers/1, get_channels/0]).
 -export([dispatch/3]).
 
 %% Extended API
 -export([sub/3, unsub/3, pub/3]).
--export([get_subscribers/2, get_topics/1]).
+-export([get_subscribers/2, get_channels/1]).
 -export([dispatch/4]).
 
 %% Debug
@@ -46,9 +46,9 @@
 
 %% Distribution parameters
 %% n: number of replicas.
-%% sub | unsub | pub | dispatch | get_subscribers | get_topics: quorums.
+%% sub | unsub | pub | dispatch | get_subscribers | get_channels: quorums.
 -type parameter() :: n | sub | unsub | pub | dispatch |
-                     get_subscribers | get_topics.
+                     get_subscribers | get_channels.
 
 %% ebus_dist options
 -type option()    :: {parameter(), pos_integer()}.
@@ -70,63 +70,63 @@
 %%% API
 %%%===================================================================
 
--spec sub(ebus:topic(), ebus:handler()) -> ebus:ebus_ret().
-sub(Topic, Handler) ->
-  sub(Topic, Handler, []).
+-spec sub(ebus:channel(), ebus:handler()) -> ebus:ebus_ret().
+sub(Channel, Handler) ->
+  sub(Channel, Handler, []).
 
--spec sub(ebus:topic(), ebus:handler(), options()) -> ebus:ebus_ret().
-sub(Topic, Handler, Opts) ->
-  Callback = {ebus_gproc, sub, [Topic, Handler]},
-  do_write(Topic, Topic, sub, Callback, Opts).
+-spec sub(ebus:channel(), ebus:handler(), options()) -> ebus:ebus_ret().
+sub(Channel, Handler, Opts) ->
+  Callback = {ebus_gproc, sub, [Channel, Handler]},
+  do_write(Channel, Channel, sub, Callback, Opts).
 
--spec unsub(ebus:topic(), ebus:handler()) -> any().
-unsub(Topic, Handler) ->
-  unsub(Topic, Handler, []).
+-spec unsub(ebus:channel(), ebus:handler()) -> any().
+unsub(Channel, Handler) ->
+  unsub(Channel, Handler, []).
 
--spec unsub(ebus:topic(), ebus:handler(), options()) -> ebus:ebus_ret().
-unsub(Topic, Handler, Opts) ->
-  Callback = {ebus_gproc, unsub, [Topic, Handler]},
-  do_write(Topic, Topic, unsub, Callback, Opts).
+-spec unsub(ebus:channel(), ebus:handler(), options()) -> ebus:ebus_ret().
+unsub(Channel, Handler, Opts) ->
+  Callback = {ebus_gproc, unsub, [Channel, Handler]},
+  do_write(Channel, Channel, unsub, Callback, Opts).
 
--spec pub(ebus:topic(), ebus:payload()) -> ebus:ebus_ret().
-pub(Topic, Message) ->
-  pub(Topic, Message, []).
+-spec pub(ebus:channel(), ebus:payload()) -> ebus:ebus_ret().
+pub(Channel, Message) ->
+  pub(Channel, Message, []).
 
--spec pub(ebus:topic(), ebus:payload(), options()) -> ebus:ebus_ret().
-pub(Topic, Message, Opts) ->
-  Callback = {ebus_gproc, pub, [Topic, Message]},
-  do_write(Topic, Topic, pub, Callback, Opts).
+-spec pub(ebus:channel(), ebus:payload(), options()) -> ebus:ebus_ret().
+pub(Channel, Message, Opts) ->
+  Callback = {ebus_gproc, pub, [Channel, Message]},
+  do_write(Channel, Channel, pub, Callback, Opts).
 
--spec get_subscribers(ebus:topic()) -> ebus:ebus_ret().
-get_subscribers(Topic) ->
-  get_subscribers(Topic, []).
+-spec get_subscribers(ebus:channel()) -> ebus:ebus_ret().
+get_subscribers(Channel) ->
+  get_subscribers(Channel, []).
 
--spec get_subscribers(ebus:topic(), options()) -> ebus:ebus_ret().
-get_subscribers(Topic, Opts) ->
-  Callback = {ebus_gproc, get_subscribers, [Topic]},
-  do_write(Topic, Topic, get_subscribers, Callback, Opts).
+-spec get_subscribers(ebus:channel(), options()) -> ebus:ebus_ret().
+get_subscribers(Channel, Opts) ->
+  Callback = {ebus_gproc, get_subscribers, [Channel]},
+  do_write(Channel, Channel, get_subscribers, Callback, Opts).
 
--spec get_topics() -> [ebus:topic()].
-get_topics() ->
+-spec get_channels() -> [ebus:channel()].
+get_channels() ->
   get_subscribers([]).
 
--spec get_topics(options()) -> [ebus:topic()].
-get_topics(Opts) ->
-  Callback = {ebus_gproc, get_topics, []},
-  do_write(undefined, undefined, get_topics, Callback, Opts).
+-spec get_channels(options()) -> [ebus:channel()].
+get_channels(Opts) ->
+  Callback = {ebus_gproc, get_channels, []},
+  do_write(undefined, undefined, get_channels, Callback, Opts).
 
 -spec dispatch(
-  ebus:topic(), ebus:payload(), ebus:handler()
+  ebus:channel(), ebus:payload(), ebus:handler()
 ) -> ebus:ebus_ret().
-dispatch(Topic, Message, Handler) ->
-  dispatch(Topic, Message, Handler, []).
+dispatch(Channel, Message, Handler) ->
+  dispatch(Channel, Message, Handler, []).
 
 -spec dispatch(
-  ebus:topic(), ebus:payload(), ebus:handler(), options()
+  ebus:channel(), ebus:payload(), ebus:handler(), options()
 ) -> ebus:ebus_ret().
-dispatch(Topic, Message, Handler, Opts) ->
-  Callback = {ebus_gproc, dispatch, [Topic, Message, Handler]},
-  do_write(Topic, Topic, dispatch, Callback, Opts).
+dispatch(Channel, Message, Handler, Opts) ->
+  Callback = {ebus_gproc, dispatch, [Channel, Message, Handler]},
+  do_write(Channel, Channel, dispatch, Callback, Opts).
 
 %%%===================================================================
 %%% Debug functions

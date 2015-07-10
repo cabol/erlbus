@@ -84,7 +84,7 @@
                 pub             :: non_neg_integer(),
                 dispatch        :: non_neg_integer(),
                 get_subscribers :: non_neg_integer(),
-                get_channels      :: non_neg_integer()}).
+                get_channels    :: non_neg_integer()}).
 
 %% Modules
 -define(MODULES, [ebus_pg2, ebus_gproc, ebus_dist]).

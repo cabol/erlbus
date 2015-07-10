@@ -181,7 +181,8 @@ and you will be able to use other features too, that we'll cover later.
 First, we have to create an Erlang module to implement the behavior `ebus_handler`, which defines a
 callback to handling message logic: `handle_msg({Channel, Payload}, Context)`, where:
 
-- `Channel` is the channel where message comes from.
+- `Channel` is the logical mechanism that allows communicate two or more endpoints each other
+  (either Pub/Sub or Point-to-Point) through messages.
 - `Payload` is the message itself, the content af what you published or dispatched.
 - `Context` is an optional parameter that you can pass in the moment of the handler creation,
    and you want to be able to recovered at the moment of the `handle_msg` invocation.

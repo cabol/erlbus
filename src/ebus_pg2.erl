@@ -29,55 +29,55 @@
 
 %% API
 -export([sub/2, unsub/2, pub/2]).
--export([get_subscribers/1, get_topics/0]).
+-export([get_subscribers/1, get_channels/0]).
 -export([dispatch/3]).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
 
--spec sub(ebus:topic(), ebus:handler()) -> ok.
-sub(Topic, Handler) ->
-  case pg2:join(Topic, Handler) of
+-spec sub(ebus:channel(), ebus:handler()) -> ok.
+sub(Channel, Handler) ->
+  case pg2:join(Channel, Handler) of
     ok ->
       ok;
     {error, {no_such_group, _}} ->
-      ok = pg2:create(Topic),
-      ok = pg2:join(Topic, Handler),
+      ok = pg2:create(Channel),
+      ok = pg2:join(Channel, Handler),
       ok
   end.
 
--spec unsub(ebus:topic(), ebus:handler()) -> ok.
-unsub(Topic, Handler) ->
-  case pg2:leave(Topic, Handler) of
+-spec unsub(ebus:channel(), ebus:handler()) -> ok.
+unsub(Channel, Handler) ->
+  case pg2:leave(Channel, Handler) of
     ok ->
       ok;
     {error, {no_such_group, _}} ->
-      ok = pg2:create(Topic),
-      ok = pg2:leave(Topic, Handler),
+      ok = pg2:create(Channel),
+      ok = pg2:leave(Channel, Handler),
       ok
   end.
 
--spec pub(ebus:topic(), ebus:payload()) -> ok.
-pub(Topic, Msg) ->
-  Pids = get_subscribers(Topic),
-  lists:foreach(fun(Pid) -> Pid ! {ebus, {Topic, Msg}} end, Pids).
+-spec pub(ebus:channel(), ebus:payload()) -> ok.
+pub(Channel, Msg) ->
+  Pids = get_subscribers(Channel),
+  lists:foreach(fun(Pid) -> Pid ! {ebus, {Channel, Msg}} end, Pids).
 
--spec get_subscribers(ebus:topic()) -> [ebus:handler()].
-get_subscribers(Topic) ->
-  case pg2:get_members(Topic) of
+-spec get_subscribers(ebus:channel()) -> [ebus:handler()].
+get_subscribers(Channel) ->
+  case pg2:get_members(Channel) of
     {error, {no_such_group, _}} ->
-      ok = pg2:create(Topic),
-      pg2:get_members(Topic);
+      ok = pg2:create(Channel),
+      pg2:get_members(Channel);
     Members ->
       Members
   end.
 
--spec get_topics() -> [ebus:topic()].
-get_topics() ->
+-spec get_channels() -> [ebus:channel()].
+get_channels() ->
   pg2:which_groups().
 
--spec dispatch(ebus:topic(), ebus:payload(), ebus:handler()) -> ok.
-dispatch(Topic, Msg, Handler) ->
-  Handler ! {ebus, {Topic, Msg}},
+-spec dispatch(ebus:channel(), ebus:payload(), ebus:handler()) -> ok.
+dispatch(Channel, Msg, Handler) ->
+  Handler ! {ebus, {Channel, Msg}},
   ok.

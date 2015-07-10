@@ -8,6 +8,6 @@
 %% API
 -export([handle_msg/2]).
 
-handle_msg({Topic, Msg}, Context) ->
-  io:format("[Pid: ~p][Topic: ~p][Msg: ~p][Ctx: ~p]~n",
-            [self(), Topic, Msg, Context]).
+handle_msg({Channel, Msg}, Context) ->
+  io:format("[Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n",
+            [self(), Channel, Msg, Context]).

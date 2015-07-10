@@ -55,7 +55,7 @@
 -type pool_opt()   :: {name, atom()} | {size, integer()}.
 -type option()     :: {monitors, [pid()]} | {pool, [pool_opt()]}.
 -type options()    :: [option()].
--type handle_fun() :: fun((ebus:topic(), ebus:payload()) -> ok).
+-type handle_fun() :: fun((ebus:channel(), ebus:payload()) -> ok).
 -type status()     :: exiting | garbage_collecting | waiting | running |
                       runnable | suspended.
 
@@ -197,8 +197,8 @@ parse_options([{_, _} | Opts], State) ->
 %% @private
 anonymous_handler(Fun) ->
   receive
-    {ebus, {Topic, Msg}} ->
-      Fun(Topic, Msg),
+    {ebus, {Channel, Msg}} ->
+      Fun(Channel, Msg),
       anonymous_handler(Fun);
     exit ->
       ok

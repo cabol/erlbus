@@ -87,14 +87,14 @@ t_pub_sub(Module) ->
   MH3 = ebus_handler:new(?HANDLER, <<"MH3">>),
 
   %% Subscribe MH1 and MH2
-  ok = Module:sub(t1, MH1),
-  ok = Module:sub(t1, MH2),
+  ok = Module:sub(ch1, MH1),
+  ok = Module:sub(ch1, MH2),
 
   %% Check subscribers
-  2 = length(Module:get_subscribers(t1)),
+  2 = length(Module:get_subscribers(ch1)),
 
-  %% Publish to 't1'
-  ok = Module:pub(t1, {<<"ID1">>, <<"Hi!">>}),
+  %% Publish to 'ch1'
+  ok = Module:pub(ch1, {<<"ID1">>, <<"Hi!">>}),
   timer:sleep(500),
 
   %% Check arrival of messages to right handlers (MH1, MH2)
@@ -105,16 +105,16 @@ t_pub_sub(Module) ->
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH3">>])),
 
   %% Subscribe MH3
-  ok = Module:sub(t1, MH3),
+  ok = Module:sub(ch1, MH3),
 
   %% Check subscribers
-  3 = length(Module:get_subscribers(t1)),
+  3 = length(Module:get_subscribers(ch1)),
 
-  %% Check topics
-  1 = length(Module:get_topics()),
+  %% Check channels
+  1 = length(Module:get_channels()),
 
-  %% Publish to 't1'
-  ok = Module:pub(t1, {<<"ID2">>, <<"Hi!">>}),
+  %% Publish to 'ch1'
+  ok = Module:pub(ch1, {<<"ID2">>, <<"Hi!">>}),
   timer:sleep(500),
 
   %% Check arrival of messages to right handlers (MH1, MH2, MH3)
@@ -125,8 +125,8 @@ t_pub_sub(Module) ->
   [{_, M23}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"MH3">>])),
   M23 = <<"Hi!">>,
 
-  %% Send to 't1' and 'MH1'
-  ok = Module:dispatch(t1, {<<"ID2-1">>, <<"Send">>}, MH1),
+  %% Send to 'ch1' and 'MH1'
+  ok = Module:dispatch(ch1, {<<"ID2-1">>, <<"Send">>}, MH1),
   timer:sleep(500),
 
   %% Check arrival of messages to right handlers (MH1, MH2, MH3)
@@ -135,14 +135,14 @@ t_pub_sub(Module) ->
   M21_2 = <<"Send">>,
 
   %% Unsubscribe MH1 and MH2
-  ok = Module:unsub(t1, MH1),
-  ok = Module:unsub(t1, MH2),
+  ok = Module:unsub(ch1, MH1),
+  ok = Module:unsub(ch1, MH2),
 
   %% Check subscribers
-  1 = length(Module:get_subscribers(t1)),
+  1 = length(Module:get_subscribers(ch1)),
 
-  %% Publish to 't1'
-  ok = Module:pub(t1, {<<"ID3">>, <<"Hi!">>}),
+  %% Publish to 'ch1'
+  ok = Module:pub(ch1, {<<"ID3">>, <<"Hi!">>}),
   timer:sleep(500),
 
   %% Check arrival of messages to right handlers (MH3)

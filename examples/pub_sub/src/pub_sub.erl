@@ -9,7 +9,7 @@
 -export([stop/0, stop/1]).
 
 -define(HANDLER, pub_sub_handler).
--define(TOPIC, pub_sub_topic).
+-define(CHANNEL, pub_sub_channel).
 
 %% API.
 
@@ -17,8 +17,8 @@ start() ->
   application:ensure_all_started(pub_sub).
 
 start(_Type, _Args) ->
-  P = spawn_link(fun() -> publisher(?TOPIC) end),
-  lists:foreach(fun(N) -> subscriber(?TOPIC, N) end, lists:seq(1, 3)),
+  P = spawn_link(fun() -> publisher(?CHANNEL) end),
+  lists:foreach(fun(N) -> subscriber(?CHANNEL, N) end, lists:seq(1, 3)),
   timer:sleep(1 * 60 * 1000),
   exit(P, kill),
   teardown_ebus().
@@ -31,16 +31,16 @@ stop(_State) ->
 
 %% Internals
 
-publisher(Topic) ->
+publisher(Channel) ->
   timer:sleep(500),
   Payload = now(),
   io:format("Publish: ~p~n", [Payload]),
-  ebus:pub(Topic, Payload),
-  publisher(Topic).
+  ebus:pub(Channel, Payload),
+  publisher(Channel).
 
-subscriber(Topic, N) ->
+subscriber(Channel, N) ->
   Handler = ebus_handler:new(?HANDLER, N),
-  ebus:sub(Topic, Handler).
+  ebus:sub(Channel, Handler).
 
 teardown_ebus() ->
   application:stop(ebus).

@@ -10,7 +10,7 @@ endif
 
 TEST_DEPS =
 
-dep_gproc     = git https://github.com/uwiger/gproc.git    0.4
+dep_gproc     = git https://github.com/uwiger/gproc.git    0.5
 dep_poolboy   = git https://github.com/devinus/poolboy.git 1.5.1
 dep_riak_core = git https://github.com/basho/riak_core     2.1.1
 

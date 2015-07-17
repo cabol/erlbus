@@ -79,7 +79,7 @@ sub(Channel, Handler, Opts) ->
   Callback = {ebus_gproc, sub, [Channel, Handler]},
   do_write(Channel, Channel, sub, Callback, Opts).
 
--spec unsub(ebus:channel(), ebus:handler()) -> any().
+-spec unsub(ebus:channel(), ebus:handler()) -> ebus:ebus_ret().
 unsub(Channel, Handler) ->
   unsub(Channel, Handler, []).
 
@@ -97,11 +97,11 @@ pub(Channel, Message, Opts) ->
   Callback = {ebus_gproc, pub, [Channel, Message]},
   do_write(Channel, Channel, pub, Callback, Opts).
 
--spec get_subscribers(ebus:channel()) -> ebus:ebus_ret().
+-spec get_subscribers(ebus:channel()) -> [ebus:handler()].
 get_subscribers(Channel) ->
   get_subscribers(Channel, []).
 
--spec get_subscribers(ebus:channel(), options()) -> ebus:ebus_ret().
+-spec get_subscribers(ebus:channel(), options()) -> [ebus:handler()].
 get_subscribers(Channel, Opts) ->
   Callback = {ebus_gproc, get_subscribers, [Channel]},
   do_write(Channel, Channel, get_subscribers, Callback, Opts).

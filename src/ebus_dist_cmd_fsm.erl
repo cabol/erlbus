@@ -55,7 +55,7 @@
 -record(state, {req_id          :: pos_integer(),
                 coordinator     :: node(),
                 from            :: pid(),
-                bkey            :: binary(),
+                bkey            :: {binary(), binary()},
                 op              :: atom(),
                 val = undefined :: term() | undefined,
                 preflist        :: riak_core_apl:preflist2(),

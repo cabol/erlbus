@@ -27,7 +27,7 @@
 
 %% API
 -export([keyfind/2, keyfind/3, rem_dups_from_list/1, count_val_in_list/2,
-         to_bin/1, to_atom/1, to_integer/1, to_float/1,
+         to_bin/1, to_atom/1, to_integer/1, to_float/1, to_list/1,
          build_name/1, get_best_pid/1]).
 
 %%%===================================================================
@@ -72,7 +72,7 @@ count_val_in_list(Val, L) ->
   lists:foldl(F, 0, L).
 
 %% @doc Converts any type to binary.
--spec to_bin(any()) -> atom().
+-spec to_bin(any()) -> binary().
 to_bin(Data) when is_integer(Data) ->
   integer_to_binary(Data);
 to_bin(Data) when is_float(Data) ->
@@ -117,6 +117,21 @@ to_float(Data) when is_list(Data) ->
 to_float(Data) when is_pid(Data); is_reference(Data); is_tuple(Data) ->
   erlang:phash2(Data);
 to_float(Data) ->
+  Data.
+
+%% @doc Converts any type to list.
+-spec to_list(any()) -> list().
+to_list(Data) when is_binary(Data) ->
+  binary_to_list(Data);
+to_list(Data) when is_integer(Data) ->
+  integer_to_list(Data);
+to_list(Data) when is_float(Data) ->
+  float_to_list(Data);
+to_list(Data) when is_atom(Data) ->
+  atom_to_list(Data);
+to_list(Data) when is_pid(Data); is_reference(Data); is_tuple(Data) ->
+  integer_to_list(erlang:phash2(Data));
+to_list(Data) ->
   Data.
 
 %% @doc Build a name given the list of terms, then they are transformed

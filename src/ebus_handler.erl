@@ -48,12 +48,13 @@
 %%%===================================================================
 
 %% State
--record(state, {module :: atom(), context :: any(), pool :: atom()}).
+-record(state, {module  :: atom(),
+                context :: any(),
+                pool    :: pid()}).
 
 %% Types
 -type context()    :: any().
--type pool_opt()   :: {name, atom()} | {size, integer()}.
--type option()     :: {monitors, [pid()]} | {pool, [pool_opt()]}.
+-type option()     :: {monitors, [pid()]} | {pool, pid()}.
 -type options()    :: [option()].
 -type handle_fun() :: fun((ebus:channel(), ebus:payload()) -> ok).
 -type status()     :: exiting | garbage_collecting | waiting | running |

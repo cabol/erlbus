@@ -302,8 +302,8 @@ code_change(_OldVsn, State, _Extra) ->
 %% @private
 parse_options([], State) ->
   State;
-parse_options([{call_timeout, Ch} | Opts], State) when is_integer(Ch) ->
-  parse_options(Opts, State#state{call_timeout = Ch});
+parse_options([{call_timeout, T} | Opts], State) when is_integer(T) ->
+  parse_options(Opts, State#state{call_timeout = T});
 parse_options([{n, N} | Opts], State) when is_integer(N) ->
   parse_options(Opts, State#state{n = N});
 parse_options([{sub, Q} | Opts], State) when is_integer(Q) ->

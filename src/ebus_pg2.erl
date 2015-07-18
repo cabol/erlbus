@@ -36,7 +36,9 @@
 %%% API
 %%%===================================================================
 
--spec sub(ebus:channel(), ebus:handler()) -> ok.
+-spec sub(ebus:channel(), ebus:handler() | [ebus:handler()]) -> ok.
+sub(Channel, Handlers) when is_list(Handlers) ->
+  lists:foreach(fun(Handler) -> sub(Channel, Handler) end, Handlers);
 sub(Channel, Handler) ->
   case pg2:join(Channel, Handler) of
     ok ->
@@ -47,7 +49,9 @@ sub(Channel, Handler) ->
       ok
   end.
 
--spec unsub(ebus:channel(), ebus:handler()) -> ok.
+-spec unsub(ebus:channel(), ebus:handler() | [ebus:handler()]) -> ok.
+unsub(Channel, Handlers) when is_list(Handlers) ->
+  lists:foreach(fun(Handler) -> unsub(Channel, Handler) end, Handlers);
 unsub(Channel, Handler) ->
   case pg2:leave(Channel, Handler) of
     ok ->

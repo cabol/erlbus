@@ -102,7 +102,7 @@
 %%      to the `Channel`.
 -callback sub(Channel, Handler) -> Response when
   Channel  :: channel(),
-  Handler  :: handler(),
+  Handler  :: handler() | [handler()],
   Response :: ebus_ret().
 
 %% @doc Unsubscribe the `Handler` of the `Channel`. Once the operation is done
@@ -110,7 +110,7 @@
 %%      `Channel` any more.
 -callback unsub(Channel, Handler) -> Response when
   Channel  :: channel(),
-  Handler  :: handler(),
+  Handler  :: handler() | [handler()],
   Response :: ebus_ret().
 
 %% @doc Sends the `Message` to all subscribers of the `Channel`.
@@ -169,19 +169,19 @@ set_options(Opts) ->
 set_options(Name, Opts) ->
   gen_server:call(Name, {set_options, Opts}).
 
--spec sub(channel(), handler()) -> ebus_ret().
+-spec sub(channel(), handler() | [handler()]) -> ebus_ret().
 sub(Channel, Handler) ->
   gen_server:call(?SERVER, {sub, Channel, Handler}).
 
--spec sub(name(), channel(), handler()) -> ebus_ret().
+-spec sub(name(), channel(), handler() | [handler()]) -> ebus_ret().
 sub(Name, Channel, Handler) ->
   gen_server:call(Name, {sub, Channel, Handler}).
 
--spec unsub(channel(), handler()) -> ebus_ret().
+-spec unsub(channel(), handler() | [handler()]) -> ebus_ret().
 unsub(Channel, Handler) ->
   gen_server:call(?SERVER, {unsub, Channel, Handler}).
 
--spec unsub(name(), channel(), handler()) -> ebus_ret().
+-spec unsub(name(), channel(), handler() | [handler()]) -> ebus_ret().
 unsub(Name, Channel, Handler) ->
   gen_server:call(Name, {unsub, Channel, Handler}).
 

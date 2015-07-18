@@ -36,13 +36,17 @@
 %%% API
 %%%===================================================================
 
--spec sub(ebus:channel(), ebus:handler()) -> ok.
+-spec sub(ebus:channel(), ebus:handler() | [ebus:handler()]) -> ok.
+sub(Channel, Handlers) when is_list(Handlers) ->
+  lists:foreach(fun(Handler) -> sub(Channel, Handler) end, Handlers);
 sub(Channel, Handler) ->
   Key = {p, l, {?MODULE, Channel}},
   gproc_lib:insert_reg(Key, gproc:default(Key), Handler, l),
   ok.
 
--spec unsub(ebus:channel(), ebus:handler()) -> ok.
+-spec unsub(ebus:channel(), ebus:handler() | [ebus:handler()]) -> ok.
+unsub(Channel, Handlers) when is_list(Handlers) ->
+  lists:foreach(fun(Handler) -> unsub(Channel, Handler) end, Handlers);
 unsub(Channel, Handler) ->
   Key = {p, l, {?MODULE, Channel}},
   gproc_lib:remove_reg(Key, Handler, unreg),

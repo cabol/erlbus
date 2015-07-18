@@ -41,7 +41,7 @@ Introduction
 ------------
 
 **ErlBus** is a very lightweight and simple approach to build messaging-based apps. Messaging infrastructure
-that provides: Publish/Subscribe, Point-To-Point, Message Handler, Event Driven Consumer, Task Executor, etc.
+that provides: Publish/Subscribe, Point-To-Point, Event Driven Consumer (Message Handler), Task Executor, etc.
 
 
 Quick Start Example
@@ -69,9 +69,8 @@ MH2 = ebus_handler:new_anonymous(F).
 <0.52.0>
 
 % Subscribe them to channel ch1
-ebus:sub(ch1, MH1).
-ok
-ebus:sub(ch1, MH2).
+% Note that `ebus:sub/2,3` can receive either a single handler or a list of them
+ebus:sub(ch1, [MH1, MH2]).
 ok
 
 % Let's publish a message to 'ch1'
@@ -96,6 +95,7 @@ OTHER -- Channel: ch2 - Msg: "Hello other!"
 ok
 
 % Unsubscribe 'MH2' from ch1
+% Note that `ebus:unsub/2,3` can also receive a single handler (this case) or a list of them
 ebus:unsub(ch1, MH2).
 ok
 
@@ -173,8 +173,8 @@ So far, so good! Let's continue!
 Basic Pub/Sub Example
 ---------------------
 
-Previously we say a simple example how Pub/Sub works, but using anonymous handlers, which aren't bad
-in case of any demo o simple test. But the right way would be create your own message handler, using
+Previously we saw a simple example how Pub/Sub works, but using anonymous handlers, which aren't bad
+in case of any demo or simple test. But the right way would be create your own message handler, using
 the `ebus_handler` beahvior. Because in this way, your handler will be part of the supervision tree,
 and you will be able to use other features too, that we'll cover later.
 
@@ -261,11 +261,7 @@ MH3 = ebus_handler:new(my_handler, <<"MH3">>).
 <0.49.0>
 
 %% Subscribe created handlers
-ebus:sub(my_channel, MH1).
-ok
-ebus:sub(my_channel, MH2).
-ok
-ebus:sub(my_channel, MH3).
+ebus:sub(my_channel, [MH1, MH2, MH3]).
 ok
 
 %% Get the subscribed handlers

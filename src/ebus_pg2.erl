@@ -29,7 +29,7 @@
 
 %% API
 -export([sub/2, unsub/2, pub/2]).
--export([get_subscribers/1, get_channels/0]).
+-export([subscribers/1, channels/0]).
 -export([dispatch/3]).
 
 %%%===================================================================
@@ -64,11 +64,11 @@ unsub(Channel, Handler) ->
 
 -spec pub(ebus:channel(), ebus:payload()) -> ok.
 pub(Channel, Msg) ->
-  Pids = get_subscribers(Channel),
+  Pids = subscribers(Channel),
   lists:foreach(fun(Pid) -> Pid ! {ebus, {Channel, Msg}} end, Pids).
 
--spec get_subscribers(ebus:channel()) -> [ebus:handler()].
-get_subscribers(Channel) ->
+-spec subscribers(ebus:channel()) -> [ebus:handler()].
+subscribers(Channel) ->
   case pg2:get_members(Channel) of
     {error, {no_such_group, _}} ->
       ok = pg2:create(Channel),
@@ -77,8 +77,8 @@ get_subscribers(Channel) ->
       Members
   end.
 
--spec get_channels() -> [ebus:channel()].
-get_channels() ->
+-spec channels() -> [ebus:channel()].
+channels() ->
   pg2:which_groups().
 
 -spec dispatch(ebus:channel(), ebus:payload(), ebus:handler()) -> ok.

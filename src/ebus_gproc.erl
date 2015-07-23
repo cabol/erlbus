@@ -29,7 +29,7 @@
 
 %% API
 -export([sub/2, unsub/2, pub/2]).
--export([get_subscribers/1, get_channels/0]).
+-export([subscribers/1, channels/0]).
 -export([dispatch/3]).
 
 %%%===================================================================
@@ -57,13 +57,13 @@ pub(Channel, Message) ->
   gproc:send({p, l, {?MODULE, Channel}}, {ebus, {Channel, Message}}),
   ok.
 
--spec get_subscribers(ebus:channel()) -> [ebus:handler()].
-get_subscribers(Channel) ->
+-spec subscribers(ebus:channel()) -> [ebus:handler()].
+subscribers(Channel) ->
   Key = {p, l, {?MODULE, Channel}},
   gproc:lookup_pids(Key).
 
--spec get_channels() -> [ebus:channel()].
-get_channels() ->
+-spec channels() -> [ebus:channel()].
+channels() ->
   Pattern = {{{p, l, {?MODULE, '$1'}}, '_'}, '_', '_'},
   L = [N || [N] <- ets:match(gproc, Pattern)],
   ebus_util:rem_dups_from_list(L).

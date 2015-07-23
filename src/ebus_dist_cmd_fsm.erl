@@ -231,9 +231,9 @@ mk_reqid() -> erlang:phash2(os:timestamp()).
 different(A) -> fun(B) -> A =/= B end.
 
 %% @private
-repair(get_subscribers, Replies, _State) ->
+repair(subscribers, Replies, _State) ->
   max_size_list(Replies);
-repair(get_channels, Replies, _State) ->
+repair(channels, Replies, _State) ->
   MergedList = merge_lists(Replies),
   ebus_util:rem_dups_from_list(MergedList);
 repair(_Op, Replies, #state{q = Q}) ->

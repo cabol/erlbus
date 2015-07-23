@@ -31,8 +31,8 @@
 -export([new/1, new/2, new/3]).
 -export([set_options/1, set_options/2]).
 -export([sub/2, sub/3, unsub/2, unsub/3, pub/2, pub/3]).
--export([get_subscribers/1, get_subscribers/2]).
--export([get_channels/0, get_channels/1]).
+-export([subscribers/1, subscribers/2]).
+-export([channels/0, channels/1]).
 -export([dispatch/3, dispatch/4]).
 
 %% Hidden
@@ -52,7 +52,7 @@
 
 %% ebus types
 -type cmd()      :: sub | unsub | pub | dispatch |
-                    get_subscribers | get_channels.
+                    subscribers | channels.
 -type channel()  :: any().
 -type payload()  :: any().
 -type message()  :: {channel(), payload()}.
@@ -76,15 +76,15 @@
 -type options() :: [option()].
 
 %% State
--record(state, {module          :: module(),
-                call_timeout    :: non_neg_integer(),
-                n               :: non_neg_integer(),
-                sub             :: non_neg_integer(),
-                unsub           :: non_neg_integer(),
-                pub             :: non_neg_integer(),
-                dispatch        :: non_neg_integer(),
-                get_subscribers :: non_neg_integer(),
-                get_channels    :: non_neg_integer()}).
+-record(state, {module       :: module(),
+                call_timeout :: non_neg_integer(),
+                n            :: pos_integer(),
+                sub          :: pos_integer(),
+                unsub        :: pos_integer(),
+                pub          :: pos_integer(),
+                dispatch     :: pos_integer(),
+                subscribers  :: pos_integer(),
+                channels     :: pos_integer()}).
 
 %% Modules
 -define(MODULES, [ebus_pg2, ebus_gproc, ebus_dist]).
@@ -120,12 +120,12 @@
   Response :: ebus_ret().
 
 %% @doc Returns a list with all subscribers to the `Channel`.
--callback get_subscribers(Channel) -> Response when
+-callback subscribers(Channel) -> Response when
   Channel  :: channel(),
   Response :: [handler()].
 
 %% @doc Returns a list with all registered channels.
--callback get_channels() -> Response when
+-callback channels() -> Response when
   Response :: [channel()].
 
 %% @doc Sends the `Message` to `Handler`, which is subscribed to `Channel`.
@@ -193,21 +193,21 @@ pub(Channel, Message) ->
 pub(Name, Channel, Message) ->
   gen_server:call(Name, {pub, Channel, Message}).
 
--spec get_subscribers(channel()) -> [handler()].
-get_subscribers(Channel) ->
-  gen_server:call(?SERVER, {get_subscribers, Channel}).
+-spec subscribers(channel()) -> [handler()].
+subscribers(Channel) ->
+  subscribers(?SERVER, Channel).
 
--spec get_subscribers(name(), channel()) -> [handler()].
-get_subscribers(Name, Channel) ->
-  gen_server:call(Name, {get_subscribers, Channel}).
+-spec subscribers(name(), channel()) -> [handler()].
+subscribers(Name, Channel) ->
+  gen_server:call(Name, {subscribers, Channel}).
 
--spec get_channels() -> [channel()].
-get_channels() ->
-  gen_server:call(?SERVER, get_channels).
+-spec channels() -> [channel()].
+channels() ->
+  gen_server:call(?SERVER, channels).
 
--spec get_channels(name()) -> [channel()].
-get_channels(Name) ->
-  gen_server:call(Name, get_channels).
+-spec channels(name()) -> [channel()].
+channels(Name) ->
+  gen_server:call(Name, channels).
 
 -spec dispatch(channel(), payload(), handler()) -> ebus_ret().
 dispatch(Channel, Message, Handler) ->
@@ -254,21 +254,21 @@ handle_call({pub, Ch, M},
 handle_call({pub, Ch, M}, _From, #state{module = Mod} = S0) ->
   Reply = Mod:pub(Ch, M),
   {reply, Reply, S0};
-handle_call({get_subscribers, Ch},
+handle_call({subscribers, Ch},
             _From,
-            #state{module = ebus_dist, n = N, get_subscribers = Q} = S0) ->
-  Reply = ebus_dist:get_subscribers(Ch, dist_opts(N, Q)),
+            #state{module = ebus_dist, n = N, subscribers = Q} = S0) ->
+  Reply = ebus_dist:subscribers(Ch, dist_opts(N, Q)),
   {reply, Reply, S0};
-handle_call({get_subscribers, Ch}, _From, #state{module = Mod} = S0) ->
-  Reply = Mod:get_subscribers(Ch),
+handle_call({subscribers, Ch}, _From, #state{module = Mod} = S0) ->
+  Reply = Mod:subscribers(Ch),
   {reply, Reply, S0};
-handle_call(get_channels,
+handle_call(channels,
             _From,
-            #state{module = ebus_dist, n = N, get_channels = Q} = S0) ->
-  Reply = ebus_dist:get_channels(dist_opts(N, Q)),
+            #state{module = ebus_dist, n = N, channels = Q} = S0) ->
+  Reply = ebus_dist:channels(dist_opts(N, Q)),
   {reply, Reply, S0};
-handle_call(get_channels, _From, #state{module = Mod} = S0) ->
-  Reply = Mod:get_channels(),
+handle_call(channels, _From, #state{module = Mod} = S0) ->
+  Reply = Mod:channels(),
   {reply, Reply, S0};
 handle_call({dispatch, Ch, M, H},
             _From,
@@ -314,10 +314,10 @@ parse_options([{pub, Q} | Opts], State) when is_integer(Q) ->
   parse_options(Opts, State#state{pub = Q});
 parse_options([{dispatch, Q} | Opts], State) when is_integer(Q) ->
   parse_options(Opts, State#state{dispatch = Q});
-parse_options([{get_subscribers, Q} | Opts], State) when is_integer(Q) ->
-  parse_options(Opts, State#state{get_subscribers = Q});
-parse_options([{get_channels, Q} | Opts], State) when is_integer(Q) ->
-  parse_options(Opts, State#state{get_channels = Q});
+parse_options([{subscribers, Q} | Opts], State) when is_integer(Q) ->
+  parse_options(Opts, State#state{subscribers = Q});
+parse_options([{channels, Q} | Opts], State) when is_integer(Q) ->
+  parse_options(Opts, State#state{channels = Q});
 parse_options([_Opt | Opts], State) ->
   parse_options(Opts, State).
 

@@ -87,10 +87,10 @@ basic_n1_q1(_Config) ->
   ok = ebus:sub(Name, ch1, [MH1, MH2]),
 
   %% Check subscribers
-  2 = length(ebus:get_subscribers(Name, ch1)),
+  2 = length(ebus:subscribers(Name, ch1)),
 
   %% Check channels
-  1 = length(ebus:get_channels(Name)),
+  1 = length(ebus:channels(Name)),
 
   %% Publish to 'ch1'
   ok = ebus:pub(Name, ch1, {<<"ID1">>, <<"Hi!">>}),
@@ -107,7 +107,7 @@ basic_n1_q1(_Config) ->
   ok = ebus:sub(Name, ch1, MH3),
 
   %% Check subscribers
-  3 = length(ebus:get_subscribers(Name, ch1)),
+  3 = length(ebus:subscribers(Name, ch1)),
 
   %% Publish to 'ch1'
   ok = ebus:pub(Name, ch1, {<<"ID2">>, <<"Hi!">>}),
@@ -134,7 +134,7 @@ basic_n1_q1(_Config) ->
   ok = ebus:unsub(Name, ch1, [MH1, MH2]),
 
   %% Check subscribers
-  1 = length(ebus:get_subscribers(Name, ch1)),
+  1 = length(ebus:subscribers(Name, ch1)),
 
   %% Publish to 'ch1'
   ok = ebus:pub(Name, ch1, {<<"ID3">>, <<"Hi!">>}),
@@ -150,7 +150,7 @@ basic_n1_q1(_Config) ->
   ok = ebus:unsub(Name, ch1, MH3),
 
   %% Check subscribers
-  0 = length(ebus:get_subscribers(Name, ch1)),
+  0 = length(ebus:subscribers(Name, ch1)),
 
   %% Publish to 'ch1'
   ok = ebus:pub(Name, ch1, {<<"ID4">>, <<"Hi!">>}),

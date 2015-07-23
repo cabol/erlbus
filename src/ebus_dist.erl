@@ -29,12 +29,12 @@
 
 %% API
 -export([sub/2, unsub/2, pub/2]).
--export([get_subscribers/1, get_channels/0]).
+-export([subscribers/1, channels/0]).
 -export([dispatch/3]).
 
 %% Extended API
 -export([sub/3, unsub/3, pub/3]).
--export([get_subscribers/2, get_channels/1]).
+-export([subscribers/2, channels/1]).
 -export([dispatch/4]).
 
 %% Debug
@@ -46,9 +46,9 @@
 
 %% Distribution parameters
 %% n: number of replicas.
-%% sub | unsub | pub | dispatch | get_subscribers | get_channels: quorums.
+%% sub | unsub | pub | dispatch | subscribers | channels: quorums.
 -type parameter() :: n | sub | unsub | pub | dispatch |
-                     get_subscribers | get_channels.
+                     subscribers | channels.
 
 %% ebus_dist options
 -type option()    :: {parameter(), pos_integer()}.
@@ -97,23 +97,23 @@ pub(Channel, Message, Opts) ->
   Callback = {ebus_gproc, pub, [Channel, Message]},
   do_write(Channel, Channel, pub, Callback, Opts).
 
--spec get_subscribers(ebus:channel()) -> [ebus:handler()].
-get_subscribers(Channel) ->
-  get_subscribers(Channel, []).
+-spec subscribers(ebus:channel()) -> [ebus:handler()].
+subscribers(Channel) ->
+  subscribers(Channel, []).
 
--spec get_subscribers(ebus:channel(), options()) -> [ebus:handler()].
-get_subscribers(Channel, Opts) ->
-  Callback = {ebus_gproc, get_subscribers, [Channel]},
-  do_write(Channel, Channel, get_subscribers, Callback, Opts).
+-spec subscribers(ebus:channel(), options()) -> [ebus:handler()].
+subscribers(Channel, Opts) ->
+  Callback = {ebus_gproc, subscribers, [Channel]},
+  do_write(Channel, Channel, subscribers, Callback, Opts).
 
--spec get_channels() -> [ebus:channel()].
-get_channels() ->
-  get_subscribers([]).
+-spec channels() -> [ebus:channel()].
+channels() ->
+  channels([]).
 
--spec get_channels(options()) -> [ebus:channel()].
-get_channels(Opts) ->
-  Callback = {ebus_gproc, get_channels, []},
-  do_write(undefined, undefined, get_channels, Callback, Opts).
+-spec channels(options()) -> [ebus:channel()].
+channels(Opts) ->
+  Callback = {ebus_gproc, channels, []},
+  do_write(undefined, undefined, channels, Callback, Opts).
 
 -spec dispatch(
   ebus:channel(), ebus:payload(), ebus:handler()

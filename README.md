@@ -242,8 +242,8 @@ Is as simple as this:
 ebus:dispatch(ch1, "Hi!", MyHandler).
 ```
 
-Instead of call `ebus:pub(Channel, Message)`, you call `ebus:dispatch(Channel, Message, Handler)`, and
-the only difference is that you have to provide the `Handler` which will receive the message.
+Instead of call `ebus:pub(Channel, Message)`, you call `ebus:dispatch(Channel, Message, Handler)`,
+and the only difference is that you have to provide the `Handler` which will receive the message.
 The reason of this is that you're free to implement your scheduling/dispatching strategy. Also,
 you can use `ebus_util:get_best_pid(ListOfHandlers)` to find an available handler. For example:
 
@@ -265,7 +265,7 @@ ebus:sub(my_channel, [MH1, MH2, MH3]).
 ok
 
 %% Get the subscribed handlers
-Handlers = ebus:get_subscribers(my_channel).
+Handlers = ebus:subscribers(my_channel).
 [<0.47.0>, <0.48.0>, <0.49.0>]
 
 %% Find an available handler

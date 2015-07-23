@@ -90,7 +90,7 @@ t_pub_sub(Module) ->
   ok = Module:sub(ch1, [MH1, MH2]),
 
   %% Check subscribers
-  2 = length(Module:get_subscribers(ch1)),
+  2 = length(Module:subscribers(ch1)),
 
   %% Publish to 'ch1'
   ok = Module:pub(ch1, {<<"ID1">>, <<"Hi!">>}),
@@ -107,10 +107,10 @@ t_pub_sub(Module) ->
   ok = Module:sub(ch1, MH3),
 
   %% Check subscribers
-  3 = length(Module:get_subscribers(ch1)),
+  3 = length(Module:subscribers(ch1)),
 
   %% Check channels
-  1 = length(Module:get_channels()),
+  1 = length(Module:channels()),
 
   %% Publish to 'ch1'
   ok = Module:pub(ch1, {<<"ID2">>, <<"Hi!">>}),
@@ -137,7 +137,7 @@ t_pub_sub(Module) ->
   ok = Module:unsub(ch1, [MH1, MH2]),
 
   %% Check subscribers
-  1 = length(Module:get_subscribers(ch1)),
+  1 = length(Module:subscribers(ch1)),
 
   %% Publish to 'ch1'
   ok = Module:pub(ch1, {<<"ID3">>, <<"Hi!">>}),
@@ -160,7 +160,7 @@ t_pub_sub(Module) ->
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3-1">>, <<"MH3">>])),
 
   %% Check subscribers
-  0 = length(Module:get_subscribers(ch1)),
+  0 = length(Module:subscribers(ch1)),
 
   %% End
   cleanup([MH1, MH2, MH3]),

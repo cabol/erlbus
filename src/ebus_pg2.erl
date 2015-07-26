@@ -45,8 +45,7 @@ sub(Channel, Handler) ->
       ok;
     {error, {no_such_group, _}} ->
       ok = pg2:create(Channel),
-      ok = pg2:join(Channel, Handler),
-      ok
+      ok = pg2:join(Channel, Handler)
   end.
 
 -spec unsub(ebus:channel(), ebus:handler() | [ebus:handler()]) -> ok.
@@ -58,8 +57,7 @@ unsub(Channel, Handler) ->
       ok;
     {error, {no_such_group, _}} ->
       ok = pg2:create(Channel),
-      ok = pg2:leave(Channel, Handler),
-      ok
+      ok = pg2:leave(Channel, Handler)
   end.
 
 -spec pub(ebus:channel(), ebus:payload()) -> ok.

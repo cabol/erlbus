@@ -136,7 +136,8 @@ dispatch(Channel, Message, Handler, Opts) ->
 %% @spec ping() -> term()
 -spec ping() -> pong | pang.
 ping() ->
-  DocIdx = riak_core_util:chash_key({<<"ping">>, term_to_binary(now())}),
+  DocIdx = riak_core_util:chash_key(
+    {<<"ping">>, term_to_binary(os:timestamp())}),
   PrefList = riak_core_apl:get_primary_apl(DocIdx, 1, ?APP),
   [{IdxNode, _Type}] = PrefList,
   riak_core_vnode_master:sync_spawn_command(IdxNode, ping, ?MASTER).

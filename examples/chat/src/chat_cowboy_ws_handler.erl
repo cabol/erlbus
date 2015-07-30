@@ -39,3 +39,4 @@ get_name(Req) ->
   Name = list_to_binary(string:join([inet_parse:ntoa(Host), 
     ":", io_lib:format("~p", [Port])], "")),
   Name.
+  

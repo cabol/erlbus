@@ -7,3 +7,4 @@
 
 handle_msg({_Channel, Msg}, Context) ->
   Context ! {message_published, Msg}.
+  

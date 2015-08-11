@@ -16,7 +16,7 @@
 
 ERLANG_MK_FILENAME := $(realpath $(lastword $(MAKEFILE_LIST)))
 
-ERLANG_MK_VERSION = 1.2.0-631-g56cbd9e
+ERLANG_MK_VERSION = 1.2.0-634-g2f69190
 
 # Core configuration.
 
@@ -4658,7 +4658,7 @@ erlc-include:
 	fi
 
 define compile_erl
-	$(erlc_verbose) erlc -v $(ERLC_OPTS) -o ebin/ \
+	$(erlc_verbose) erlc -v $(if $(IS_DEP),$(filter-out -Werror,$(ERLC_OPTS)),$(ERLC_OPTS)) -o ebin/ \
 		-pa ebin/ -I include/ $(filter-out $(ERLC_EXCLUDE_PATHS),\
 		$(COMPILE_FIRST_PATHS) $(1))
 endef
@@ -4753,7 +4753,7 @@ ifneq ($(SKIP_DEPS),)
 test-deps:
 else
 test-deps: $(ALL_TEST_DEPS_DIRS)
-	$(verbose) for dep in $(ALL_TEST_DEPS_DIRS) ; do $(MAKE) -C $$dep; done
+	$(verbose) for dep in $(ALL_TEST_DEPS_DIRS) ; do $(MAKE) -C $$dep IS_DEP=1; done
 endif
 
 ifneq ($(wildcard $(TEST_DIR)),)
@@ -5365,7 +5365,9 @@ CI_OTP ?=
 ifeq ($(strip $(CI_OTP)),)
 ci::
 else
-ci:: $(KERL) $(addprefix ci-,$(CI_OTP))
+ci:: $(addprefix ci-,$(CI_OTP))
+
+ci-prepare: $(addprefix $(CI_INSTALL_DIR)/,$(CI_OTP))
 
 ci-setup::
 
@@ -5374,7 +5376,7 @@ ci_verbose = $(ci_verbose_$(V))
 
 define ci_target
 ci-$(1): $(CI_INSTALL_DIR)/$(1)
-	-$(ci_verbose) \
+	$(ci_verbose) \
 		PATH="$(CI_INSTALL_DIR)/$(1)/bin:$(PATH)" \
 		CI_OTP_RELEASE="$(1)" \
 		CT_OPTS="-label $(1)" \
@@ -5384,9 +5386,11 @@ endef
 $(foreach otp,$(CI_OTP),$(eval $(call ci_target,$(otp))))
 
 define ci_otp_target
-$(CI_INSTALL_DIR)/$(1):
+ifeq ($(wildcard $(CI_INSTALL_DIR)/$(1)),)
+$(CI_INSTALL_DIR)/$(1): $(KERL)
 	$(KERL) build git $(OTP_GIT) $(1) $(1)
 	$(KERL) install $(1) $(CI_INSTALL_DIR)/$(1)
+endif
 endef
 
 $(foreach otp,$(CI_OTP),$(eval $(call ci_otp_target,$(otp))))

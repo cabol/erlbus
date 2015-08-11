@@ -31,8 +31,7 @@
 -export([start_link/3]).
 -export([new/1, new/2, new/3, delete/1]).
 -export([new_pool/3, new_pool/4, new_pool/5]).
--export([get_module/1, get_context/1]).
--export([new_anonymous/1]).
+-export([get_callback/1, get_context/1]).
 -export([status/1]).
 
 %% gen_server callbacks
@@ -47,18 +46,22 @@
 %%% Types & Macros
 %%%===================================================================
 
-%% State
--record(state, {module  :: atom(),
-                context :: any(),
-                pool    :: pid()}).
-
 %% Types
 -type context()    :: any().
 -type option()     :: {monitors, [pid()]} | {pool, pid()}.
 -type options()    :: [option()].
--type handle_fun() :: fun((ebus:channel(), ebus:payload()) -> ok).
+-type handle_fun() :: fun((ebus:message(), context()) -> any()).
+-type callback()   :: module() | handle_fun().
 -type status()     :: exiting | garbage_collecting | waiting | running |
                       runnable | suspended.
+
+%% Exported types
+-export_type([context/0, option/0, options/0, handle_fun/0, callback/0]).
+
+%% State
+-record(state, {callback :: callback(),
+                context  :: any(),
+                pool     :: pid()}).
 
 %%%===================================================================
 %%% Callback API
@@ -74,21 +77,21 @@
 %%% API
 %%%===================================================================
 
--spec start_link(module(), context(), options()) -> gen:start_ret().
-start_link(Module, Context, Opts) ->
-  gen_server:start_link(?MODULE, [Module, Context, Opts], []).
+-spec start_link(callback(), context(), options()) -> gen:start_ret().
+start_link(Callback, Context, Opts) ->
+  gen_server:start_link(?MODULE, [Callback, Context, Opts], []).
 
--spec new(module()) -> ebus:handler().
-new(Module) ->
-  new(Module, undefined).
+-spec new(callback()) -> ebus:handler().
+new(Callback) ->
+  new(Callback, undefined).
 
--spec new(module(), context()) -> ebus:handler().
-new(Module, Context) ->
-  new(Module, Context, []).
+-spec new(callback(), context()) -> ebus:handler().
+new(Callback, Context) ->
+  new(Callback, Context, []).
 
--spec new(module(), context(), options()) -> ebus:handler().
-new(Module, Context, Opts) ->
-  case start_link(Module, Context, Opts) of
+-spec new(callback(), context(), options()) -> ebus:handler().
+new(Callback, Context, Opts) ->
+  case start_link(Callback, Context, Opts) of
     {error, Reason} ->
       throw(Reason);
     {ok, Pid} ->
@@ -99,35 +102,31 @@ new(Module, Context, Opts) ->
 delete(Handler) ->
   gen_server:cast(Handler, exit).
 
--spec new_pool(atom(), integer(), module()) -> ebus:handler().
-new_pool(Name, Size, Module) ->
-  new_pool(Name, Size, Module, undefined).
+-spec new_pool(atom(), integer(), callback()) -> ebus:handler().
+new_pool(Name, Size, Callback) ->
+  new_pool(Name, Size, Callback, undefined).
 
--spec new_pool(atom(), integer(), module(), context()) -> ebus:handler().
-new_pool(Name, Size, Module, Context) ->
-  new_pool(Name, Size, Module, Context, []).
+-spec new_pool(atom(), integer(), callback(), context()) -> ebus:handler().
+new_pool(Name, Size, Callback, Context) ->
+  new_pool(Name, Size, Callback, Context, []).
 
 -spec new_pool(
-  atom(), integer(), module(), context(), options()
+  atom(), integer(), callback(), context(), options()
 ) -> ebus:handler().
-new_pool(Name, Size, Module, Context, Opts) ->
+new_pool(Name, Size, Callback, Context, Opts) ->
   PoolArgs = [{name, {local, Name}},
               {worker_module, ebus_worker},
               {size, Size}],
-  {ok, Pool} = poolboy:start_link(PoolArgs, [Module, Context]),
-  new(Module, Context, [{pool, Pool} | Opts]).
+  {ok, Pool} = poolboy:start_link(PoolArgs, [Callback, Context]),
+  new(Callback, Context, [{pool, Pool} | Opts]).
 
--spec get_module(ebus:handler()) -> any().
-get_module(Handler) ->
-  gen_server:call(Handler, get_mod).
+-spec get_callback(ebus:handler()) -> callback().
+get_callback(Handler) ->
+  gen_server:call(Handler, get_callback).
 
 -spec get_context(ebus:handler()) -> any().
 get_context(Handler) ->
   gen_server:call(Handler, get_ctx).
-
--spec new_anonymous(handle_fun()) -> ebus:handler().
-new_anonymous(Fun) ->
-  spawn_link(fun() -> anonymous_handler(Fun) end).
 
 -spec status(ebus:handler()) -> undefined | {status, status()}.
 status(Handler) ->
@@ -138,13 +137,13 @@ status(Handler) ->
 %%%===================================================================
 
 %% @private
-init([Module, Context, Opts]) ->
-  State = parse_options(Opts, #state{module = Module, context = Context}),
+init([Callback, Context, Opts]) ->
+  State = parse_options(Opts, #state{callback = Callback, context = Context}),
   {ok, State}.
 
 %% @private
-handle_call(get_mod, _From, #state{module = Module} = State) ->
-  {reply, Module, State};
+handle_call(get_callback, _From, #state{callback = Callback} = State) ->
+  {reply, Callback, State};
 handle_call(get_ctx, _From, #state{context = Ctx} = State) ->
   {reply, Ctx, State};
 handle_call(_Request, _From, State) ->
@@ -165,8 +164,11 @@ handle_info({ebus, Event}, #state{pool = Pool} = State) when is_pid(Pool) ->
   Worker = poolboy:checkout(Pool),
   ok = gen_server:cast(Worker, {handle_msg, Event, Pool}),
   {noreply, State};
-handle_info({ebus, Event}, #state{module = Mod, context = Ctx} = State) ->
-  Mod:handle_msg(Event, Ctx),
+handle_info({ebus, Event}, #state{callback = CB, context = Ctx} = State) ->
+  case is_function(CB) of
+    true  -> CB(Event, Ctx);
+    false -> CB:handle_msg(Event, Ctx)
+  end,
   {noreply, State};
 handle_info(_Info, State) ->
   {noreply, State}.
@@ -194,13 +196,3 @@ parse_options([{pool, Pool} | Opts], State) ->
   parse_options(Opts, State#state{pool = Pool});
 parse_options([{_, _} | Opts], State) ->
   parse_options(Opts, State).
-
-%% @private
-anonymous_handler(Fun) ->
-  receive
-    {ebus, {Channel, Msg}} ->
-      Fun(Channel, Msg),
-      anonymous_handler(Fun);
-    exit ->
-      ok
-  end.

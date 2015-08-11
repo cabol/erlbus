@@ -79,6 +79,9 @@ ebus_pub_sub(_Config) ->
   MH2 = ebus_handler:new(?HANDLER, <<"MH2">>),
   MH3 = ebus_handler:new(?HANDLER, <<"MH3">>),
 
+  %% Create anonymous handler
+  AH1 = ebus_handler:new(fun my_test_handler:handle_msg/2, <<"AH1">>),
+
   %% Subscribe MH1 and MH2
   ok = ebus:sub(ch1, [MH1, MH2]),
 
@@ -102,6 +105,7 @@ ebus_pub_sub(_Config) ->
   [{_, M12}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH2">>])),
   M12 = <<"Hi!">>,
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH3">>])),
+  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"AH1">>])),
 
   %% Publish to 'ch2'
   ok = ebus:pub(ch2, {<<"ID1-2">>, <<"Hi!">>}),
@@ -110,6 +114,7 @@ ebus_pub_sub(_Config) ->
   M13 = <<"Hi!">>,
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-2">>, <<"MH2">>])),
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-2">>, <<"MH3">>])),
+  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-2">>, <<"AH1">>])),
 
   %% Publish to 'ch3'
   ok = ebus:pub(ch3, {<<"ID1-3">>, <<"Hi!">>}),
@@ -118,12 +123,13 @@ ebus_pub_sub(_Config) ->
   M14 = <<"Hi!">>,
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-3">>, <<"MH1">>])),
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-3">>, <<"MH3">>])),
+  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1-3">>, <<"AH1">>])),
 
   %% Subscribe MH3
-  ok = ebus:sub(ch1, MH3),
+  ok = ebus:sub(ch1, [MH3, AH1]),
 
   %% Check subscribers
-  3 = length(ebus:subscribers(ch1)),
+  4 = length(ebus:subscribers(ch1)),
 
   %% Publish to 'ch1'
   ok = ebus:pub(ch1, {<<"ID2">>, <<"Hi!">>}),
@@ -136,6 +142,8 @@ ebus_pub_sub(_Config) ->
   M22 = <<"Hi!">>,
   [{_, M23}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"MH3">>])),
   M23 = <<"Hi!">>,
+  [{_, M24}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"AH1">>])),
+  M24 = <<"Hi!">>,
 
   %% Send to 'ch1' and 'MH1'
   ok = ebus:dispatch(ch1, {<<"ID2-1">>, <<"Send">>}, MH1),
@@ -150,7 +158,7 @@ ebus_pub_sub(_Config) ->
   ok = ebus:unsub(ch1, [MH1, MH2]),
 
   %% Check subscribers
-  1 = length(ebus:subscribers(ch1)),
+  2 = length(ebus:subscribers(ch1)),
 
   %% Publish to 'ch1'
   ok = ebus:pub(ch1, {<<"ID3">>, <<"Hi!">>}),
@@ -161,6 +169,8 @@ ebus_pub_sub(_Config) ->
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3">>, <<"MH2">>])),
   [{_, M33}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3">>, <<"MH3">>])),
   M33 = <<"Hi!">>,
+  [{_, M34}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3">>, <<"AH1">>])),
+  M34 = <<"Hi!">>,
 
   %% Unsubscribe MH1 from 'ch2'
   ok = ebus:unsub(ch2, MH1),
@@ -192,27 +202,45 @@ ebus_pool(_Config) ->
 
   %% Create handlers
   MH1 = ebus_handler:new(?HANDLER, <<"MH1">>),
-  MH2 = ebus_handler:new_pool(my_pool_1, 3, ?HANDLER, <<"MH2">>),
+  Pool1 = ebus_handler:new_pool(my_pool_1, 3, ?HANDLER, <<"Pool1">>),
+  Pool2 = ebus_handler:new_pool(
+    my_pool_2, 3, fun my_test_handler:handle_msg/2, <<"Pool2">>),
 
   %% Subscribe MH1 and MH2
   ok = ebus:sub(Name, ch1, MH1),
-  ok = ebus:sub(Name, ch1, MH2),
+  ok = ebus:sub(Name, ch1, [Pool1, Pool2]),
 
   %% Check subscribers
-  2 = length(ebus:subscribers(Name, ch1)),
+  3 = length(ebus:subscribers(Name, ch1)),
 
   %% Publish to 'ch1'
   ok = ebus:pub(Name, ch1, {<<"ID1">>, <<"Hi!">>}),
   timer:sleep(500),
 
-  %% Check arrival of messages to right handlers (MH1, MH2)
+  %% Check arrival of messages to right handlers
   [{_, M11}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH1">>])),
   M11 = <<"Hi!">>,
-  [{_, M12}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH2">>])),
+  [{_, M12}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"Pool1">>])),
   M12 = <<"Hi!">>,
+  [{_, M13}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"Pool2">>])),
+  M13 = <<"Hi!">>,
+
+  %% Unsub pool2
+  ok = ebus:unsub(Name, ch1, Pool2),
+
+  %% Publish to 'ch1'
+  ok = ebus:pub(Name, ch1, {<<"ID2">>, <<"Hi!">>}),
+  timer:sleep(500),
+
+  %% Check arrival of messages to right handlers
+  [{_, M21}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"MH1">>])),
+  M21 = <<"Hi!">>,
+  [{_, M22}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"Pool1">>])),
+  M22 = <<"Hi!">>,
+  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"Pool2">>])),
 
   %% End
-  cleanup([MH1, MH2]),
+  cleanup([MH1, Pool1, Pool2]),
   ok.
 
 %%%===================================================================

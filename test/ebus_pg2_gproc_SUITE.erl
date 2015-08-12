@@ -86,6 +86,9 @@ t_pub_sub(Module) ->
   MH2 = ebus_handler:new(?HANDLER, <<"MH2">>),
   MH3 = ebus_handler:new(?HANDLER, <<"MH3">>),
 
+  %% Create anonymous handler
+  AH1 = ebus_handler:new(fun my_test_handler:handle_msg/2, <<"AH1">>),
+
   %% Subscribe MH1 and MH2
   ok = Module:sub(ch1, [MH1, MH2]),
 
@@ -102,12 +105,13 @@ t_pub_sub(Module) ->
   [{_, M12}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH2">>])),
   M12 = <<"Hi!">>,
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH3">>])),
+  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"AH1">>])),
 
   %% Subscribe MH3
-  ok = Module:sub(ch1, MH3),
+  ok = Module:sub(ch1, [MH3, AH1]),
 
   %% Check subscribers
-  3 = length(Module:subscribers(ch1)),
+  4 = length(Module:subscribers(ch1)),
 
   %% Check channels
   1 = length(Module:channels()),
@@ -123,6 +127,8 @@ t_pub_sub(Module) ->
   M22 = <<"Hi!">>,
   [{_, M23}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"MH3">>])),
   M23 = <<"Hi!">>,
+  [{_, M24}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"AH1">>])),
+  M24 = <<"Hi!">>,
 
   %% Send to 'ch1' and 'MH1'
   ok = Module:dispatch(ch1, {<<"ID2-1">>, <<"Send">>}, MH1),
@@ -137,7 +143,7 @@ t_pub_sub(Module) ->
   ok = Module:unsub(ch1, [MH1, MH2]),
 
   %% Check subscribers
-  1 = length(Module:subscribers(ch1)),
+  2 = length(Module:subscribers(ch1)),
 
   %% Publish to 'ch1'
   ok = Module:pub(ch1, {<<"ID3">>, <<"Hi!">>}),
@@ -148,6 +154,8 @@ t_pub_sub(Module) ->
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3">>, <<"MH2">>])),
   [{_, M33}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3">>, <<"MH3">>])),
   M33 = <<"Hi!">>,
+  [{_, M34}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3">>, <<"AH1">>])),
+  M34 = <<"Hi!">>,
 
   %% Unsubscribe MH3
   ok = Module:unsub(ch1, MH3),
@@ -158,9 +166,11 @@ t_pub_sub(Module) ->
 
   %% Check arrival of messages to MH3
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3-1">>, <<"MH3">>])),
+  [{_, M44}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3-1">>, <<"AH1">>])),
+  M44 = <<"Hi!">>,
 
   %% Check subscribers
-  0 = length(Module:subscribers(ch1)),
+  1 = length(Module:subscribers(ch1)),
 
   %% End
   cleanup([MH1, MH2, MH3]),

@@ -12,8 +12,22 @@ A new way to build soft real-time and high scalable messaging-based applications
 See also: [WEST](https://github.com/cabol/west).
 
 
-Building ErlBus
----------------
+## Introduction
+
+**ErlBus** is a simple and lightweight tool to build messaging-based applications. Provides a simple and usable
+interface on top of known and proven libs/tools like [pg2](http://erlang.org/doc/man/pg2.html), [gproc](https://github.com/uwiger/gproc) and [riak_core](https://github.com/basho/riak_core),
+enabling a clearer and more powerful semantics for messaging patterns such as: Publish/Subscribe, Point-To-Point,
+Event-Driven Consumers, Task Executors, etc.
+
+**ErlBus** also provides a flexible and configurable distribution model to achieve the desired scalability levels.
+You can run **ErlBus** in two ways:
+
+- **Default**. **ErlBus** running on top of `pg2` and using [Distributed Erlang](http://erlang.org/doc/reference_manual/distributed.html).
+- **ErlBus** with `riak_core` and `gproc` local. This option gives you more flexibility, you can configure parameters
+  like replication factor and quorums (Read more [Here](#distributed-erlbus)).
+
+
+## Building ErlBus
 
 Assuming you have a working Erlang installation (recommended 17 or later), building **ErlBus** should be as simple as:
 
@@ -22,30 +36,20 @@ Assuming you have a working Erlang installation (recommended 17 or later), build
     $ make
 
 
-Note
-----
+## Note
 
 **ErlBus** has 3 dependencies: `gproc`, `poolboy` and `riak_core`. But the last one `riak_core` is fetched
 on-demand, when you want to run **ErlBus** in distributed mode, inheriting all `riak_core` benefits.
 Learn more about [Riak Core](https://github.com/basho/riak_core).
 
-In this scenario, **ErlBus** runs
-with `gproc` locally on each node, and `riak_core` on top of it, managing the cluster and task/command
-distribution.
+In this scenario, **ErlBus** runs with `gproc` locally on each node, and `riak_core` on top of it,
+managing the cluster and task/command distribution.
 
 - To enable fetching of `riak_core`, export the OS environment variable `EBUS_DIST=true` (this can be done
   e.g. from a GNU Makefile).
 
 
-Introduction
-------------
-
-**ErlBus** is a very lightweight and simple approach to build messaging-based apps. Messaging infrastructure
-that provides: Publish/Subscribe, Point-To-Point, Event Driven Consumer (Message Handler), Task Executor, etc.
-
-
-Quick Start Example
--------------------
+## Quick Start Example
 
 Start an Erlang console:
 
@@ -58,14 +62,17 @@ Once into the erlang console:
 application:start(ebus).
 ok
 
-% Create anonymous function to be invoked by handlers
-F = fun(Channel, Msg) -> io:format("Channel: ~p - Msg: ~p~n", [Channel, Msg]) end.
+% Create anonymous function to act as handler
+F = fun({Channel, Msg}, Ctx) ->
+      io:format("[Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n",
+                [self(), Channel, Msg, Ctx])
+    end.
 #Fun<erl_eval.12.90072148>
 
 % Create anonymous handlers
-MH1 = ebus_handler:new_anonymous(F).
+MH1 = ebus_handler:new(F).
 <0.50.0>
-MH2 = ebus_handler:new_anonymous(F).
+MH2 = ebus_handler:new(F, {my_ctx, <<"MH2">>}).
 <0.52.0>
 
 % Subscribe them to channel ch1
@@ -75,14 +82,12 @@ ok
 
 % Let's publish a message to 'ch1'
 ebus:pub(ch1, "Hello!").
-Channel: ch1 - Msg: "Hello!"
-Channel: ch1 - Msg: "Hello!"
+[Pid: <0.50.0>][Channel: ch1][Msg: "Hello!"][Ctx: undefined]
+[Pid: <0.52.0>][Channel: ch1][Msg: "Hello!"][Ctx: {my_ctx,<<"MH2">>}]
 ok
 
 % Another handler
-F2 = fun(Channel, Msg) -> io:format("OTHER -- Channel: ~p - Msg: ~p~n", [Channel, Msg]) end.
-#Fun<erl_eval.12.90072148>
-MH3 = ebus_handler:new_anonymous(F2).
+MH3 = ebus_handler:new(F, {my_ctx, <<"MH3">>}).
 <0.54.0>
 
 % Subscribe the other handler 'MH3' to ch2
@@ -91,7 +96,7 @@ ok
 
 % Publish to 'ch2'
 ebus:pub(ch2, "Hello other!").
-OTHER -- Channel: ch2 - Msg: "Hello other!"
+[Pid: <0.57.0>][Channel: ch2][Msg: "Hello other!"][Ctx: {my_ctx,<<"MH3">>}]
 ok
 
 % Unsubscribe 'MH2' from ch1
@@ -101,7 +106,7 @@ ok
 
 % Publish again to 'ch1'
 ebus:pub(ch1, "Hello again!").
-Channel: ch1 - Msg: "Hello again!"
+[Pid: <0.50.0>][Channel: ch1][Msg: "Hello again!"][Ctx: undefined]
 ok
 ```
 
@@ -140,11 +145,14 @@ Then in `node1` create a handler and subscription to a channel:
 
 ```erlang
 % Anonymous handler function
-F = fun(Channel, Msg) -> io:format("Channel: ~p - Msg: ~p~n", [Channel, Msg]) end.
+F = fun({Channel, Msg}, Ctx) ->
+      io:format("[Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n",
+                [self(), Channel, Msg, Ctx])
+    end.
 #Fun<erl_eval.12.90072148>
 
 % Subscribe a handler
-ebus:sub(ch1, ebus_handler:new_anonymous(F)).
+ebus:sub(ch1, ebus_handler:new(F)).
 ok
 ```
 
@@ -156,30 +164,41 @@ any node:
 ```erlang
 % Publish message
 ebus:pub(ch1, "Hi!").
-Channel: ch1 - Msg: "Hi!"
+[Pid: <0.62.0>][Channel: ch1][Msg: "Hi!"][Ctx: undefined]
 ok
 ```
 
 And in the other node you will see that message has arrived too:
 
 ```erlang
-Channel: ch1 - Msg: "Hi!"
+[Pid: <0.59.0>][Channel: ch1][Msg: "Hi!"][Ctx: undefined]
 ok
 ```
 
 So far, so good! Let's continue!
 
 
-Basic Pub/Sub Example
----------------------
+## Pub/Sub Example
 
-Previously we saw a simple example how Pub/Sub works, but using anonymous handlers, which aren't bad
-in case of any demo or simple test. But the right way would be create your own message handler, using
-the `ebus_handler` beahvior. Because in this way, your handler will be part of the supervision tree,
-and you will be able to use other features too, that we'll cover later.
+Previously we saw a simple example how Pub/Sub works with `ebus`, but now let's digging into
+the core modules first.
 
-First, we have to create an Erlang module to implement the behavior `ebus_handler`, which defines a
-callback to handling message logic: `handle_msg({Channel, Payload}, Context)`, where:
+### ebus
+
+This module provides all pub/sub messaging functions. Please take a look at [ebus module](./src/ebus.erl).
+
+### ebus_handler
+
+This module provides all needed functions to create and manage message handlers. There are two ways
+to create a message handler:
+
+- Passing an anonymous function as callback (as we saw previously). The callback fun must be compliant
+  with the spec: `fun(({Channel :: any(), Payload :: any()}, Context :: any()) -> any())`.
+- Passing an existing module that implements the `ebus_handler` behavior, which defines the
+  callback: `handle_msg({Channel :: any(), Payload :: any()}, Context :: any()) -> any()`.
+
+You may have noticed that the specification in both cases (anonymous fun and behaviors) is the same.
+Both cases receives the same arguments:
 
 - `Channel` is the logical mechanism that allows communicate two or more endpoints each other
   (either Pub/Sub or Point-to-Point) through messages.
@@ -187,6 +206,8 @@ callback to handling message logic: `handle_msg({Channel, Payload}, Context)`, w
 - `Context` is an optional parameter that you can pass in the moment of the handler creation,
    and you want to be able to recovered at the moment of the `handle_msg` invocation.
 
+Now we're going to do an example using both ways. First, we have to create an Erlang module to implement
+the behavior `ebus_handler`.
 
 ### my_handler.erl
 
@@ -216,9 +237,20 @@ ok
 MH1 = ebus_handler:new(my_handler, <<"MH1">>).
 <0.49.0>
 
+% Anonymous function
+F = fun({Channel, Msg}, Ctx) ->
+      io:format("[Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n",
+                [self(), Channel, Msg, Ctx])
+    end.
+#Fun<erl_eval.12.90072148>
+
+% Handler with anonymous function
+MH2 = ebus_handler:new(F, <<"MH2">>).
+<0.50.0>
+
 % From here, everything is the same as previous example
 % Subscribe the handler to some channel
-ebus:sub(my_channel, MH1).
+ebus:sub(my_channel, [MH1, MH2]).
 ok
 
 % Now the handler is ready to receive and process messages
@@ -232,8 +264,7 @@ and now you have `ebus` running in distributed fashion, it's extremely easy, you
 anything at all.
 
 
-Point-To-Point Example
-----------------------
+## Point-To-Point Example
 
 The great thing here is that you don't need something special to implement a point-to-point behavior.
 Is as simple as this:
@@ -282,8 +313,7 @@ ok
 > - The example above, assumes that you're working with the previous compiled handler `my_hanlder.erl`.
 
 
-Task Executors (worker pool)
-----------------------------
+## Task Executors (worker pool)
 
 Suppose now that you have a handler that takes a while processing each message/event, so it will
 be blocked until complete the task, and for some scenarios would be unthinkable. Therefore,
@@ -296,13 +326,24 @@ application:start(ebus).
 ok
 
 % Create a handler with a worker pool (3 workers)
-HandlerPool = ebus_handler:new_pool(my_pool_1, 3, my_handler).
+Pool1 = ebus_handler:new_pool(my_pool_1, 3, my_handler).
 <0.49.0>
+
+% Anonymous function
+F = fun({Channel, Msg}, Ctx) ->
+      io:format("[Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n",
+                [self(), Channel, Msg, Ctx])
+    end.
+#Fun<erl_eval.12.90072148>
+
+% Pool with anonymous function
+Pool2 = ebus_handler:new_pool(my_pool_2, 3, F).
+<0.50.0>
 
 % And that's it, now the load will be distributed among the workers
 % From here everything is as previously
 % Finally, let's subscribe this new handler with workers to some channel
-ebus:sub(my_channel, HandlerPool).
+ebus:sub(my_channel, [Pool1, Pool2]).
 ok
 ```
 
@@ -314,8 +355,7 @@ ok
     worker attached to the handler (since there is only one subscribed handler).
 
 
-ErlBus with Riak Core and Gproc local
--------------------------------------
+## Distributed ErlBus
 
 **ErlBus** is distributed by default, inherits all properties of [Distributed Erlang](http://www.erlang.org/doc/reference_manual/distributed.html)
 and [`pg2`](http://erlang.org/doc/man/pg2.html). But `pg2` has some limitations, distribution model
@@ -376,19 +416,16 @@ ok
 Now `node1` and `node2` are in cluster. From here is the same as previous examples.
 
 
-Examples
---------
+## Examples
 
 See [examples](./examples).
 
 
-Running Tests
--------------
+## Running Tests
 
     $ make test
 
 
-Change Log
-----------
+## Change Log
 
 All notable changes to this project will be documented in the [CHANGELOG.md](CHANGELOG.md).

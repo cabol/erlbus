@@ -43,7 +43,9 @@
 %%%===================================================================
 
 %% State
--record(state, {module :: atom(), context :: any(), pool :: atom()}).
+-record(state, {callback :: ebus_handler:callback(),
+                context  :: any(),
+                pool     :: pid()}).
 
 %%%===================================================================
 %%% API
@@ -57,8 +59,8 @@ start_link(Args) ->
 %%%===================================================================
 
 %% @hidden
-init([Module, Context]) ->
-  {ok, #state{module = Module, context = Context}}.
+init([Callback, Context]) ->
+  {ok, #state{callback = Callback, context = Context}}.
 
 %% @hidden
 handle_call(_Request, _From, State) ->
@@ -66,9 +68,12 @@ handle_call(_Request, _From, State) ->
 
 %% @hidden
 handle_cast({handle_msg, {Channel, Msg}, Pool},
-            #state{module = Mod, context = Ctx} = State) ->
+            #state{callback = CB, context = Ctx} = State) ->
   try
-    Mod:handle_msg({Channel, Msg}, Ctx)
+    case is_function(CB) of
+      true  -> CB({Channel, Msg}, Ctx);
+      false -> CB:handle_msg({Channel, Msg}, Ctx)
+    end
   after
     poolboy:checkin(Pool, self())
   end,

@@ -50,7 +50,8 @@
 -type context()    :: any().
 -type option()     :: {monitors, [pid()]} | {pool, pid()}.
 -type options()    :: [option()].
--type handle_fun() :: fun((ebus:message(), context()) -> any()).
+-type handle_fun() :: fun((ebus:message()) -> any()) |
+                      fun((ebus:message(), context()) -> any()).
 -type callback()   :: module() | handle_fun().
 -type status()     :: exiting | garbage_collecting | waiting | running |
                       runnable | suspended.
@@ -166,8 +167,13 @@ handle_info({ebus, Event}, #state{pool = Pool} = State) when is_pid(Pool) ->
   {noreply, State};
 handle_info({ebus, Event}, #state{callback = CB, context = Ctx} = State) ->
   case is_function(CB) of
-    true  -> CB(Event, Ctx);
-    false -> CB:handle_msg(Event, Ctx)
+    true ->
+      case erlang:fun_info(CB, arity) of
+        {arity, 2} -> CB(Event, Ctx);
+        {arity, 1} -> CB(Event)
+      end;
+    false ->
+      CB:handle_msg(Event, Ctx)
   end,
   {noreply, State};
 handle_info(_Info, State) ->

@@ -86,7 +86,7 @@ t_pub_sub(Module) ->
   MH2 = ebus_handler:new(?HANDLER, <<"MH2">>),
   MH3 = ebus_handler:new(?HANDLER, <<"MH3">>),
 
-  %% Create anonymous handler
+  %% Create handlers with anonymous fun
   AH1 = ebus_handler:new(fun my_test_handler:handle_msg/2, <<"AH1">>),
 
   %% Subscribe MH1 and MH2

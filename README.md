@@ -1,7 +1,6 @@
 <img src="http://wallpaperssfree.com/wp-content/uploads/2013/05/world-fastest-train-hd-wallpapers.png" height="200" width="100%" />
 
-ErlBus
-======
+# ErlBus
 
 Message / Event Bus written in Erlang.
 
@@ -62,17 +61,25 @@ Once into the erlang console:
 application:start(ebus).
 ok
 
-% Create anonymous function to act as handler
-F = fun({Channel, Msg}, Ctx) ->
-      io:format("[Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n",
-                [self(), Channel, Msg, Ctx])
-    end.
+% Create callback fun
+F1 = fun({Channel, Msg}) ->
+       io:format("[Pid: ~p][Channel: ~p][Msg: ~p]~n", [self(), Channel, Msg])
+     end.
+#Fun<erl_eval.6.90072148>
+
+% Create handlers
+MH1 = ebus_handler:new(F1).
+<0.50.0>
+
+% Create another callback fun, but receiving both, message and context
+F2 = fun({Channel, Msg}, Ctx) ->
+       io:format("[Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n",
+                 [self(), Channel, Msg, Ctx])
+     end.
 #Fun<erl_eval.12.90072148>
 
-% Create anonymous handlers
-MH1 = ebus_handler:new(F).
-<0.50.0>
-MH2 = ebus_handler:new(F, {my_ctx, <<"MH2">>}).
+% Create handlers
+MH2 = ebus_handler:new(F2, {my_ctx, <<"MH2">>}).
 <0.52.0>
 
 % Subscribe them to channel ch1
@@ -82,13 +89,13 @@ ok
 
 % Let's publish a message to 'ch1'
 ebus:pub(ch1, "Hello!").
-[Pid: <0.50.0>][Channel: ch1][Msg: "Hello!"][Ctx: undefined]
-[Pid: <0.52.0>][Channel: ch1][Msg: "Hello!"][Ctx: {my_ctx,<<"MH2">>}]
+[Pid: <0.51.0>][Channel: ch1][Msg: "Hello!"]
+[Pid: <0.53.0>][Channel: ch1][Msg: "Hello!"][Ctx: {my_ctx,<<"MH2">>}]
 ok
 
 % Another handler
-MH3 = ebus_handler:new(F, {my_ctx, <<"MH3">>}).
-<0.54.0>
+MH3 = ebus_handler:new(F2, {my_ctx, <<"MH3">>}).
+<0.58.0>
 
 % Subscribe the other handler 'MH3' to ch2
 ebus:sub(ch2, MH3).
@@ -96,7 +103,7 @@ ok
 
 % Publish to 'ch2'
 ebus:pub(ch2, "Hello other!").
-[Pid: <0.57.0>][Channel: ch2][Msg: "Hello other!"][Ctx: {my_ctx,<<"MH3">>}]
+[Pid: <0.58.0>][Channel: ch2][Msg: "Hello other!"][Ctx: {my_ctx,<<"MH3">>}]
 ok
 
 % Unsubscribe 'MH2' from ch1
@@ -106,7 +113,7 @@ ok
 
 % Publish again to 'ch1'
 ebus:pub(ch1, "Hello again!").
-[Pid: <0.50.0>][Channel: ch1][Msg: "Hello again!"][Ctx: undefined]
+[Pid: <0.51.0>][Channel: ch1][Msg: "Hello again!"]
 ok
 ```
 
@@ -193,7 +200,8 @@ This module provides all needed functions to create and manage message handlers.
 to create a message handler:
 
 - Passing an anonymous function as callback (as we saw previously). The callback fun must be compliant
-  with the spec: `fun(({Channel :: any(), Payload :: any()}, Context :: any()) -> any())`.
+  with the spec: `fun(({Channel :: any(), Payload :: any()}, Context :: any()) -> any())`, or
+  `fun(({Channel :: any(), Payload :: any()}) -> any())`.
 - Passing an existing module that implements the `ebus_handler` behavior, which defines the
   callback: `handle_msg({Channel :: any(), Payload :: any()}, Context :: any()) -> any()`.
 
@@ -202,7 +210,7 @@ Both cases receives the same arguments:
 
 - `Channel` is the logical mechanism that allows communicate two or more endpoints each other
   (either Pub/Sub or Point-to-Point) through messages.
-- `Payload` is the message itself, the content af what you published or dispatched.
+- `Payload` is the message itself, the content what you published or dispatched.
 - `Context` is an optional parameter that you can pass in the moment of the handler creation,
    and you want to be able to recovered at the moment of the `handle_msg` invocation.
 

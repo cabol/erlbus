@@ -35,7 +35,7 @@
          end_per_testcase/2]).
 
 %% Tests
--export([ebus_pub_sub/1, ebus_pool/1]).
+-export([ebus_basic/1, ebus_pub_sub/1, ebus_pool/1]).
 
 -define(TAB, ebus_test).
 -define(HANDLER, my_test_handler).
@@ -45,7 +45,7 @@
 %%%===================================================================
 
 all() ->
-  [ebus_pub_sub, ebus_pool].
+  [ebus_basic, ebus_pub_sub, ebus_pool].
 
 init_per_suite(Config) ->
   application:start(ebus),
@@ -67,6 +67,36 @@ end_per_testcase(_, Config) ->
 %%% Exported Tests Functions
 %%%===================================================================
 
+ebus_basic(_Config) ->
+  %% Debug
+  ct:print("\e[1;96m 'ebus_basic' testcase. \e[0m"),
+
+  %% Callback funs
+  F1 = fun({Ch, Msg}) ->
+         ct:print("\e[1;1m [Pid: ~p][Channel: ~p][Msg: ~p]~n \e[0m",
+                  [self(), Ch, Msg])
+       end,
+  F2 = fun({Ch, Msg}, Ctx) ->
+         ct:print("\e[1;1m [Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n \e[0m",
+                  [self(), Ch, Msg, Ctx])
+       end,
+
+  %% Handlers
+  MH1 = ebus_handler:new(F1),
+  MH2 = ebus_handler:new(F2, 2),
+  MH3 = ebus_handler:new(F2, 2),
+
+  %% Subscribe handlers
+  ok = ebus:sub(ch1, [MH1, MH2, MH3]),
+
+  %% Publish to 'ch1'
+  ok = ebus:pub(ch1, <<"Hi!">>),
+  timer:sleep(500),
+
+  %% End
+  cleanup([MH1, MH2, MH3]),
+  ok.
+
 ebus_pub_sub(_Config) ->
   %% Debug
   ct:print("\e[1;96m 'ebus_pub_sub' testcase. \e[0m"),
@@ -79,7 +109,7 @@ ebus_pub_sub(_Config) ->
   MH2 = ebus_handler:new(?HANDLER, <<"MH2">>),
   MH3 = ebus_handler:new(?HANDLER, <<"MH3">>),
 
-  %% Create anonymous handler
+  %% Create handlers with anonymous fun
   AH1 = ebus_handler:new(fun my_test_handler:handle_msg/2, <<"AH1">>),
 
   %% Subscribe MH1 and MH2
@@ -186,7 +216,7 @@ ebus_pub_sub(_Config) ->
   [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID4">>, <<"MH1">>])),
 
   %% End
-  cleanup([MH1, MH2, MH3]),
+  cleanup([MH1, MH2, MH3, AH1]),
   ok.
 
 ebus_pool(_Config) ->

@@ -67,12 +67,17 @@ handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
 %% @hidden
-handle_cast({handle_msg, {Channel, Msg}, Pool},
+handle_cast({handle_msg, Event, Pool},
             #state{callback = CB, context = Ctx} = State) ->
   try
     case is_function(CB) of
-      true  -> CB({Channel, Msg}, Ctx);
-      false -> CB:handle_msg({Channel, Msg}, Ctx)
+      true ->
+        case erlang:fun_info(CB, arity) of
+          {arity, 2} -> CB(Event, Ctx);
+          {arity, 1} -> CB(Event)
+        end;
+      false ->
+        CB:handle_msg(Event, Ctx)
     end
   after
     poolboy:checkin(Pool, self())

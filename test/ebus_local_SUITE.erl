@@ -72,29 +72,24 @@ ebus_basic(_Config) ->
   ct:print("\e[1;96m 'ebus_basic' testcase. \e[0m"),
 
   %% Callback funs
-  F1 = fun({Ch, Msg}) ->
-         ct:print("\e[1;1m [Pid: ~p][Channel: ~p][Msg: ~p]~n \e[0m",
-                  [self(), Ch, Msg])
-       end,
-  F2 = fun({Ch, Msg}, Ctx) ->
-         ct:print("\e[1;1m [Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n \e[0m",
-                  [self(), Ch, Msg, Ctx])
-       end,
+  F1 = fun1(),
+  F2 = fun2(),
 
   %% Handlers
   MH1 = ebus_handler:new(F1),
   MH2 = ebus_handler:new(F2, 2),
   MH3 = ebus_handler:new(F2, 2),
+  Pool = ebus_handler:new_pool(my_pool, 3, fun1()),
 
   %% Subscribe handlers
-  ok = ebus:sub(ch1, [MH1, MH2, MH3]),
+  ok = ebus:sub(ch1, [MH1, MH2, MH3, Pool]),
 
   %% Publish to 'ch1'
   ok = ebus:pub(ch1, <<"Hi!">>),
   timer:sleep(500),
 
   %% End
-  cleanup([MH1, MH2, MH3]),
+  cleanup([MH1, MH2, MH3, Pool]),
   ok.
 
 ebus_pub_sub(_Config) ->
@@ -279,3 +274,15 @@ ebus_pool(_Config) ->
 
 cleanup(Handlers) ->
   [ebus_handler:delete(Handler) || Handler <- Handlers].
+
+fun1() ->
+  fun({Ch, Msg}) ->
+    ct:print("\e[1;1m [Pid: ~p][Channel: ~p][Msg: ~p]~n \e[0m",
+             [self(), Ch, Msg])
+  end.
+
+fun2() ->
+  fun({Ch, Msg}, Ctx) ->
+    ct:print("\e[1;1m [Pid: ~p][Channel: ~p][Msg: ~p][Ctx: ~p]~n \e[0m",
+             [self(), Ch, Msg, Ctx])
+  end.

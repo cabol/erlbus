@@ -1,4 +1,4 @@
-<img src="http://wallpaperssfree.com/wp-content/uploads/2013/05/world-fastest-train-hd-wallpapers.png" height="200" width="100%" />
+<img src="http://assets.nydailynews.com/polopoly_fs/1.1096240.1339765703!/img/httpImage/image.jpg_gen/derivatives/article_970/trains15n-1-web.jpg" height="200" width="100%" />
 
 # ErlBus
 

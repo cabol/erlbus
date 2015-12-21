@@ -1,171 +1,236 @@
-%% -------------------------------------------------------------------
-%%
-%% Copyright (c) 2015 Carlos Andres Bolaños, Inc. All Rights Reserved.
-%%
-%% This file is provided to you under the Apache License,
-%% Version 2.0 (the "License"); you may not use this file
-%% except in compliance with the License.  You may obtain
-%% a copy of the License at
-%%
-%%   http://www.apache.org/licenses/LICENSE-2.0
-%%
-%% Unless required by applicable law or agreed to in writing,
-%% software distributed under the License is distributed on an
-%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-%% KIND, either express or implied.  See the License for the
-%% specific language governing permissions and limitations
-%% under the License.
-%%
-%% -------------------------------------------------------------------
-
-%%%-------------------------------------------------------------------
-%%% @author Carlos Andres Bolaños R.A. <candres@niagara.io>
-%%% @copyright (C) 2015, <Carlos Andres Bolaños>, All Rights Reserved.
-%%% @doc Test suite for ebus with Riak Core.
-%%%-------------------------------------------------------------------
 -module(ebus_dist_SUITE).
 
 -include_lib("common_test/include/ct.hrl").
 
 %% Common Test
--export([all/0,
-         init_per_suite/1,
-         end_per_suite/1,
-         init_per_testcase/2,
-         end_per_testcase/2]).
+-export([
+  all/0,
+  init_per_suite/1,
+  end_per_suite/1
+]).
 
 %% Tests
--export([basic_n1_q1/1]).
-
--define(TAB, ebus_test).
--define(HANDLER, my_test_handler).
+-export([t_pubsub/1, t_dispatch/1]).
 
 %%%===================================================================
 %%% Common Test
 %%%===================================================================
 
-all() ->
-  [basic_n1_q1].
+all() -> [t_pubsub, t_dispatch].
 
 init_per_suite(Config) ->
-  application:start(ebus),
-  Config.
+  ebus:start(),
+  Nodes = start_slaves(),
+  [{nodes, Nodes} | Config].
 
 end_per_suite(Config) ->
-  application:stop(ebus),
-  Config.
-
-init_per_testcase(_, Config) ->
-  TabId = ets:new(?TAB, [duplicate_bag, public, named_table]),
-  [{table,TabId} | Config].
-
-end_per_testcase(_, Config) ->
-  ets:delete(?TAB),
+  ebus:stop(),
   Config.
 
 %%%===================================================================
 %%% Exported Tests Functions
 %%%===================================================================
 
-basic_n1_q1(_Config) ->
-  %% Debug
-  ct:print("\e[1;96m [ebus_dist] 'basic_n1_q1' testcase. \e[0m"),
+t_pubsub(Config) ->
+  % get config properties
+  ConfigMap = maps:from_list(Config),
+  #{nodes := Nodes} = ConfigMap,
 
-  %% Clean ETS table
-  true = ets:delete_all_objects(?TAB),
+  % check topics
+  [] = ebus:local_topics(),
+  [] = ebus:topics(),
 
-  %% Create ebus instance
-  Name = ebus_util:build_name([erlang:phash2(os:timestamp())]),
-  {ok, _} = ebus:new(Name, ebus_dist, [{n, 1}]),
+  % subscribe local process
+  ok = ebus:sub(self(), <<"T1">>),
 
-  %% Create handlers
-  MH1 = ebus_handler:new(?HANDLER, <<"MH1">>),
-  MH2 = ebus_handler:new(?HANDLER, <<"MH2">>),
-  MH3 = ebus_handler:new(?HANDLER, <<"MH3">>),
+  % spawn and subscribe remote process
+  NodePidL = spawn_remote_pids(Nodes),
+  sub_remote_pids(NodePidL, <<"T1">>),
 
-  %% Subscribe MH1 and MH2
-  ok = ebus:sub(Name, ch1, [MH1, MH2]),
+  % check topics
+  [<<"T1">>] = ebus:local_topics(),
+  [<<"T1">>] = ebus:topics(),
 
-  %% Check subscribers
-  2 = length(ebus:subscribers(Name, ch1)),
-
-  %% Check channels
-  1 = length(ebus:channels(Name)),
-
-  %% Publish to 'ch1'
-  ok = ebus:pub(Name, ch1, {<<"ID1">>, <<"Hi!">>}),
+  % publish message
+  ebus:pub(<<"T1">>, <<"hello">>),
   timer:sleep(1000),
 
-  %% Check arrival of messages to right handlers (MH1, MH2)
-  [{_, M11}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH1">>])),
-  M11 = <<"Hi!">>,
-  [{_, M12}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH2">>])),
-  M12 = <<"Hi!">>,
-  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID1">>, <<"MH3">>])),
+  % check local process received message
+  <<"hello">> = ebus_process:wait_for_msg(5000),
+  [] = ebus_process:messages(self()),
 
-  %% Subscribe MH3
-  ok = ebus:sub(Name, ch1, MH3),
+  % check remote processes received message
+  L1 = lists:duplicate(4, [<<"hello">>]),
+  L1 = r_process_messages(NodePidL),
 
-  %% Check subscribers
-  3 = length(ebus:subscribers(Name, ch1)),
-
-  %% Publish to 'ch1'
-  ok = ebus:pub(Name, ch1, {<<"ID2">>, <<"Hi!">>}),
+  % publish message
+  ebus:pub_from(self(), <<"T1">>, <<"hello">>),
   timer:sleep(1000),
 
-  %% Check arrival of messages to right handlers (MH1, MH2, MH3)
-  [{_, M21}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"MH1">>])),
-  M21 = <<"Hi!">>,
-  [{_, M22}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"MH2">>])),
-  M22 = <<"Hi!">>,
-  [{_, M23}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID2">>, <<"MH3">>])),
-  M23 = <<"Hi!">>,
+  % check local process didn't receive message
+  [] = ebus_process:messages(self()),
 
-  %% Send to 'ch1' and 'MH1'
-  ok = ebus:dispatch(Name, ch1, {<<"ID2-1">>, <<"Send">>}, MH1),
+  % check remote processes received message
+  L2 = lists:duplicate(4, [<<"hello">>, <<"hello">>]),
+  L2 = r_process_messages(NodePidL),
+
+  % check subscribers
+  Self = self(),
+  [Self] = ebus:local_subscribers(<<"T1">>),
+  5 = length(ebus:subscribers(<<"T1">>)),
+
+  % unsubscribe remote process
+  [P1 | _] = NodePidL,
+  unsub_remote_pids([P1], <<"T1">>),
+
+  % publish message
+  ebus:pub(<<"T1">>, <<"hello">>),
   timer:sleep(1000),
 
-  %% Check arrival of messages to right handlers (MH1, MH2, MH3)
-  [{_, M21_2}] = ets:lookup(
-    ?TAB, ebus_util:build_name([<<"ID2-1">>, <<"MH1">>])),
-  M21_2 = <<"Send">>,
+  % check
+  <<"hello">> = ebus_process:wait_for_msg(5000),
+  [] = ebus_process:messages(self()),
+  L3 = [
+    [<<"hello">>, <<"hello">>]
+    | lists:duplicate(3, [<<"hello">>, <<"hello">>, <<"hello">>])
+  ],
+  L3 = r_process_messages(NodePidL),
 
-  %% Unsubscribe MH1 and MH2
-  ok = ebus:unsub(Name, ch1, [MH1, MH2]),
+  % check subscribers
+  [Self] = ebus:local_subscribers(<<"T1">>),
+  4 = length(ebus:subscribers(<<"T1">>)),
 
-  %% Check subscribers
-  1 = length(ebus:subscribers(Name, ch1)),
+  % subscribe local process
+  ok = ebus:sub(self(), <<"T2">>),
 
-  %% Publish to 'ch1'
-  ok = ebus:pub(Name, ch1, {<<"ID3">>, <<"Hi!">>}),
+  % publish message
+  ebus:pub(<<"T2">>, <<"foo">>),
   timer:sleep(1000),
 
-  %% Check arrival of messages to right handlers (MH3)
-  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3">>, <<"MH1">>])),
-  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3">>, <<"MH2">>])),
-  [{_, M33}] = ets:lookup(?TAB, ebus_util:build_name([<<"ID3">>, <<"MH3">>])),
-  M33 = <<"Hi!">>,
+  % check
+  <<"foo">> = ebus_process:wait_for_msg(5000),
+  [] = ebus_process:messages(self()),
+  L3 = r_process_messages(NodePidL),
 
-  %% Unsubscribe MH3
-  ok = ebus:unsub(Name, ch1, MH3),
+  % check topics
+  [<<"T1">>, <<"T2">>] = ebus:local_topics(),
+  [<<"T1">>, <<"T2">>] = ebus:topics(),
 
-  %% Check subscribers
-  0 = length(ebus:subscribers(Name, ch1)),
+  % kill remote pid and check
+  {LastNode, LastPid} = lists:last(NodePidL),
+  rpc:call(LastNode, erlang, exit, [LastPid, kill]),
+  3 = length(ebus:subscribers(<<"T1">>)),
 
-  %% Publish to 'ch1'
-  ok = ebus:pub(Name, ch1, {<<"ID4">>, <<"Hi!">>}),
-  timer:sleep(1000),
-
-  %% Check arrival of messages to right handlers (MH3)
-  [] = ets:lookup(?TAB, ebus_util:build_name([<<"ID4">>, <<"MH3">>])),
-
-  %% End
-  cleanup([MH1, MH2, MH3]),
+  ct:print("\e[1;1m t_pubsub: \e[0m\e[32m[OK] \e[0m"),
   ok.
 
-%%%===================================================================
-%%% Internals
-%%%===================================================================
+t_dispatch(Config) ->
+  % get config properties
+  ConfigMap = maps:from_list(Config),
+  #{nodes := Nodes} = ConfigMap,
 
-cleanup(Handlers) ->
-  [ebus_handler:delete(Handler) || Handler <- Handlers].
+  % check dispatch
+  try ebus:dispatch("foo", <<"M1">>)
+  catch _:no_subscribers_available -> ok
+  end,
+
+  % subscribe local process
+  ok = ebus:sub(self(), "foo"),
+
+  % spawn and subscribe remote process
+  NodePidL = spawn_remote_pids(Nodes),
+  sub_remote_pids(NodePidL, "foo"),
+
+  1 = length(ebus:local_subscribers("foo")),
+  5 = length(ebus:subscribers("foo")),
+
+  % dispatch
+  ok = ebus:dispatch("foo", <<"M1">>),
+  timer:sleep(1000),
+
+  % check local process received message
+  <<"M1">> = ebus_process:wait_for_msg(5000),
+  [] = ebus_process:messages(self()),
+
+  % check remote processes received message
+  L1 = lists:duplicate(4, []),
+  L1 = r_process_messages(NodePidL),
+
+  % dispatch global with default dispatch_fun
+  lists:foreach(
+    fun(_) -> ok = ebus:dispatch("foo", <<"M2">>, [{scope, global}]) end,
+    lists:seq(1, 500)
+  ),
+  timer:sleep(1500),
+
+  % check remote processes received message
+  % from 500 sent messages, each remote process should have received
+  % at least one message
+  L2 = r_process_messages(NodePidL),
+  lists:foreach(fun(L) -> true = length(L) > 0 end, L2),
+
+  % dispatch fun
+  [S1 | _] = ebus:subscribers("foo"),
+  MsgsS1 = length(ebus_process:r_messages(S1)),
+  Fun = fun([H | _]) -> H end,
+  lists:foreach(
+    fun(_) ->
+      ok = ebus:dispatch(
+        "foo", <<"M3">>, [{scope, global}, {dispatch_fun, Fun}]
+      )
+    end, lists:seq(1, 100)
+  ),
+  timer:sleep(1500),
+  MsgsS11 = MsgsS1 + 100,
+  MsgsS11 = length(ebus_process:r_messages(S1)),
+
+
+  ct:print("\e[1;1m t_dispatch: \e[0m\e[32m[OK] \e[0m"),
+  ok.
+
+%%==============================================================================
+%% Internal functions
+%%==============================================================================
+
+start_slaves() ->
+  Nodes = [a, b, c, d],
+  start_slaves(Nodes, []).
+
+start_slaves([], Acc) -> Acc;
+start_slaves([Node | T], Acc) ->
+  ErlFlags = "-pa ../../_build/default/lib/*/ebin " ++
+    "-config ../../test/test.config",
+  {ok, HostNode} = ct_slave:start(Node, [
+    {kill_if_fail, true},
+    {monitor_master, true},
+    {init_timeout, 3000},
+    {startup_timeout, 3000},
+    {startup_functions, [{ebus, start, []}]},
+    {erl_flags, ErlFlags}
+  ]),
+  ct:print("\e[32m ---> Node ~p [OK] \e[0m", [HostNode]),
+  pong = net_adm:ping(HostNode),
+  start_slaves(T, [HostNode | Acc]).
+
+spawn_remote_pids(RemoteNodes) ->
+  {ResL, _} = rpc:multicall(
+    RemoteNodes, ebus_process, spawn_timer_fun, [infinity]
+  ),
+  lists:zip(RemoteNodes, ResL).
+
+sub_remote_pids(RemotePids, Topic) ->
+  lists:foreach(
+    fun({Node, Pid}) ->
+      ok = rpc:call(Node, ebus, sub, [Pid, Topic])
+    end, RemotePids
+  ).
+
+unsub_remote_pids(RemotePids, Topic) ->
+  lists:foreach(
+    fun({Node, Pid}) ->
+      ok = rpc:call(Node, ebus, unsub, [Pid, Topic])
+    end, RemotePids
+  ).
+
+r_process_messages(RemotePids) ->
+  [ebus_process:r_messages(Pid) || {_, Pid} <- RemotePids].

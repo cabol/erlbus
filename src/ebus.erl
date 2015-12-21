@@ -1,339 +1,178 @@
-%% -------------------------------------------------------------------
-%%
-%% Copyright (c) 2015 Carlos Andres Bolaños, Inc. All Rights Reserved.
-%%
-%% This file is provided to you under the Apache License,
-%% Version 2.0 (the "License"); you may not use this file
-%% except in compliance with the License.  You may obtain
-%% a copy of the License at
-%%
-%%   http://www.apache.org/licenses/LICENSE-2.0
-%%
-%% Unless required by applicable law or agreed to in writing,
-%% software distributed under the License is distributed on an
-%% "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-%% KIND, either express or implied.  See the License for the
-%% specific language governing permissions and limitations
-%% under the License.
-%%
-%% -------------------------------------------------------------------
-
 %%%-------------------------------------------------------------------
-%%% @author Carlos Andres Bolaños R.A. <candres@niagara.io>
-%%% @copyright (C) 2015, <Carlos Andres Bolaños>, All Rights Reserved.
-%%% @doc EBus API.
+%%% @doc
+%%% Main entry point for `ebus` functions.
+%%% This is also a wrapper for `ebus_ps` module.
+%%% @end
 %%%-------------------------------------------------------------------
 -module(ebus).
 
--behaviour(gen_server).
+-behaviour(application).
 
-%% API
--export([new/1, new/2, new/3]).
--export([set_options/1, set_options/2]).
--export([sub/2, sub/3, unsub/2, unsub/3, pub/2, pub/3]).
+%% PubSub API
+-export([sub/2, sub/3, sub/4]).
+-export([unsub/2, unsub/3]).
+-export([pub/2, pub/3, pub_from/3, pub_from/4]).
 -export([subscribers/1, subscribers/2]).
--export([channels/0, channels/1]).
--export([dispatch/3, dispatch/4]).
+-export([local_subscribers/1, local_subscribers/2]).
+-export([topics/0, topics/1, local_topics/0, local_topics/1]).
+-export([dispatch/2, dispatch/3, dispatch/4]).
 
-%% Hidden
--export([start_link/3]).
+%% Application callbacks and functions
+-export([start/0, stop/0]).
+-export([start/2, stop/1]).
 
-%% gen_server callbacks
--export([init/1,
-         handle_call/3,
-         handle_cast/2,
-         handle_info/2,
-         terminate/2,
-         code_change/3]).
+%% Utilities
+-export([default_ps_server/0]).
 
 %%%===================================================================
-%%% Types & Macros
+%%% Types
 %%%===================================================================
 
-%% ebus types
--type cmd()      :: sub | unsub | pub | dispatch |
-                    subscribers | channels.
--type channel()  :: any().
--type payload()  :: any().
--type message()  :: {channel(), payload()}.
--type handler()  :: pid().
--type callback() :: {Module :: module(), Function :: atom(), Args :: [any()]}.
--type reason()   :: no_such_channel | no_handler | internal.
--type ebus_ret() :: ok | {error, atom() | {reason(), channel()}}.
+% Dispatch options
+-type dispatch_fun()  :: fun(([term()]) -> term()).
+-type dispatch_opt()  :: {scope, local | global} |
+                         {dispatch_fun, dispatch_fun()}.
+-type dispatch_opts() :: [dispatch_opt()].
 
-%% Exported types
--export_type([cmd/0,
-              channel/0,
-              payload/0,
-              message/0,
-              handler/0,
-              callback/0,
-              ebus_ret/0]).
-
-%% Internal types
--type name()    :: atom().
--type option()  :: {atom(), any()}.
--type options() :: [option()].
-
-%% State
--record(state, {module       :: module(),
-                call_timeout :: non_neg_integer(),
-                n            :: pos_integer(),
-                sub          :: pos_integer(),
-                unsub        :: pos_integer(),
-                pub          :: pos_integer(),
-                dispatch     :: pos_integer(),
-                subscribers  :: pos_integer(),
-                channels     :: pos_integer()}).
-
-%% Modules
--define(MODULES, [ebus_pg2, ebus_gproc, ebus_dist]).
--define(DEFAULT, ebus_pg2).
-
-%% Server
--define(SERVER, ?MODULE).
+-export_type([dispatch_opts/0]).
 
 %%%===================================================================
-%%% Callback API
+%%% PubSub API
 %%%===================================================================
 
-%% @doc Subscribes the `Handler` to the `Channel`. Once subscription in done
-%%      successfully, the `Handler` is able to listen the all events sent
-%%      to the `Channel`.
--callback sub(Channel, Handler) -> Response when
-  Channel  :: channel(),
-  Handler  :: handler() | [handler()],
-  Response :: ebus_ret().
+%% @equiv sub(server(), Handler, Topic)
+sub(Handler, Topic) ->
+  sub(server(), Handler, Topic).
 
-%% @doc Unsubscribe the `Handler` of the `Channel`. Once the operation is done
-%%      successfully, the Handler is not able to listen events sent to the
-%%      `Channel` any more.
--callback unsub(Channel, Handler) -> Response when
-  Channel  :: channel(),
-  Handler  :: handler() | [handler()],
-  Response :: ebus_ret().
+%% @equiv sub(Server, Handler, Topic, [])
+sub(Server, Handler, Topic) ->
+  sub(Server, Handler, Topic, []).
 
-%% @doc Sends the `Message` to all subscribers of the `Channel`.
--callback pub(Channel, Message) -> Response when
-  Channel  :: channel(),
-  Message  :: payload(),
-  Response :: ebus_ret().
+-spec sub(atom(), pid(), iodata(), [term()]) -> ok | {error, term()}.
+sub(Server, Handler, Topic, Opts) ->
+  ebus_ps:subscribe(Server, Handler, ebus_utils:to_bin(Topic), Opts).
 
-%% @doc Returns a list with all subscribers to the `Channel`.
--callback subscribers(Channel) -> Response when
-  Channel  :: channel(),
-  Response :: [handler()].
+%% @equiv unsub(server(), Handler, Topic)
+unsub(Handler, Topic) ->
+  unsub(server(), Handler, Topic).
 
-%% @doc Returns a list with all registered channels.
--callback channels() -> Response when
-  Response :: [channel()].
+-spec sub(atom(), pid(), iodata()) -> ok | {error, term()}.
+unsub(Server, Handler, Topic) ->
+  ebus_ps:unsubscribe(Server, Handler, ebus_utils:to_bin(Topic)).
 
-%% @doc Sends the `Message` to `Handler`, which is subscribed to `Channel`.
--callback dispatch(Channel, Message, Handler) -> Response when
-  Channel  :: channel(),
-  Message  :: payload(),
-  Handler  :: handler(),
-  Response :: ebus_ret().
+%% @equiv pub(server(), Topic, Message)
+pub(Topic, Message) ->
+  pub(server(), Topic, Message).
 
-%%%===================================================================
-%%% Hidden API
-%%%===================================================================
+-spec pub(atom(), iodata(), term()) -> ok | {error, term()}.
+pub(Server, Topic, Message) ->
+  ebus_ps:broadcast(Server, ebus_utils:to_bin(Topic), Message).
 
-%% @hidden
--spec start_link(name(), module(), options()) -> gen:start_ret().
-start_link(Name, Module, Opts) ->
-  gen_server:start_link({local, Name}, ?MODULE, [Module, Opts], []).
+%% @equiv pub_from(server(), From, Topic, Message)
+pub_from(From, Topic, Message) ->
+  pub_from(server(), From, Topic, Message).
 
-%%%===================================================================
-%%% API
-%%%===================================================================
+-spec pub_from(atom(), pid(), iodata(), term()) -> ok | {error, term()}.
+pub_from(Server, From, Topic, Message) ->
+  ebus_ps:broadcast_from(Server, From, ebus_utils:to_bin(Topic), Message).
 
--spec new(name()) -> gen:start_ret().
-new(Name) ->
-  new(Name, ebus_pg2, []).
+%% @equiv subscribers(server(), Topic)
+subscribers(Topic) ->
+  subscribers(server(), Topic).
 
--spec new(name(), module()) -> gen:start_ret().
-new(Name, Module) ->
-  new(Name, Module, []).
+-spec subscribers(atom(), iodata()) -> [pid()].
+subscribers(Server, Topic) ->
+  Nodes = nodes(),
+  BinTopic = ebus_utils:to_bin(Topic),
+  RemoteSubscribers = lists:foldl(
+    fun(Node, Acc) ->
+      Acc ++ rpc:call(Node, ?MODULE, local_subscribers, [Server, BinTopic])
+    end, [], Nodes
+  ),
+  RemoteSubscribers ++ local_subscribers(Server, BinTopic).
 
--spec new(name(), module(), options()) -> supervisor:startchild_ret().
-new(Name, Module, Opts) ->
-  true = Name /= local andalso Name /= global,
-  ebus_sup:start_child([Name, Module, Opts]).
+%% @equiv local_subscribers(server(), Topic)
+local_subscribers(Topic) ->
+  local_subscribers(server(), Topic).
 
--spec set_options(options()) -> ok.
-set_options(Opts) ->
-  gen_server:call(?SERVER, {set_options, Opts}).
+-spec local_subscribers(atom(), iodata()) -> [pid()].
+local_subscribers(Server, Topic) ->
+  ebus_ps:subscribers(Server, ebus_utils:to_bin(Topic)).
 
--spec set_options(name(), options()) -> ok.
-set_options(Name, Opts) ->
-  gen_server:call(Name, {set_options, Opts}).
+%% @equiv topics(server())
+topics() ->
+  topics(server()).
 
--spec sub(channel(), handler() | [handler()]) -> ebus_ret().
-sub(Channel, Handler) ->
-  gen_server:call(?SERVER, {sub, Channel, Handler}).
+-spec topics(atom()) -> [binary()].
+topics(Server) ->
+  Nodes = nodes(),
+  RemoteTopics = lists:foldl(
+    fun(Node, Acc) ->
+      Acc ++ rpc:call(Node, ?MODULE, local_topics, [Server])
+    end, [], Nodes
+  ),
+  lists:usort(RemoteTopics ++ local_topics(Server)).
 
--spec sub(name(), channel(), handler() | [handler()]) -> ebus_ret().
-sub(Name, Channel, Handler) ->
-  gen_server:call(Name, {sub, Channel, Handler}).
+%% @equiv local_topics(server())
+local_topics() ->
+  local_topics(server()).
 
--spec unsub(channel(), handler() | [handler()]) -> ebus_ret().
-unsub(Channel, Handler) ->
-  gen_server:call(?SERVER, {unsub, Channel, Handler}).
+-spec local_topics(atom()) -> [binary()].
+local_topics(Server) ->
+  ebus_ps:list(Server).
 
--spec unsub(name(), channel(), handler() | [handler()]) -> ebus_ret().
-unsub(Name, Channel, Handler) ->
-  gen_server:call(Name, {unsub, Channel, Handler}).
+%% @equiv dispatch(Topic, Message, [])
+dispatch(Topic, Message) ->
+  dispatch(Topic, Message, []).
 
--spec pub(channel(), payload()) -> ebus_ret().
-pub(Channel, Message) ->
-  gen_server:call(?SERVER, {pub, Channel, Message}).
+%% @equiv dispatch(server(), Topic, Message, Opts)
+dispatch(Topic, Message, Opts) ->
+  dispatch(server(), Topic, Message, Opts).
 
--spec pub(name(), channel(), payload()) -> ebus_ret().
-pub(Name, Channel, Message) ->
-  gen_server:call(Name, {pub, Channel, Message}).
-
--spec subscribers(channel()) -> [handler()].
-subscribers(Channel) ->
-  subscribers(?SERVER, Channel).
-
--spec subscribers(name(), channel()) -> [handler()].
-subscribers(Name, Channel) ->
-  gen_server:call(Name, {subscribers, Channel}).
-
--spec channels() -> [channel()].
-channels() ->
-  gen_server:call(?SERVER, channels).
-
--spec channels(name()) -> [channel()].
-channels(Name) ->
-  gen_server:call(Name, channels).
-
--spec dispatch(channel(), payload(), handler()) -> ebus_ret().
-dispatch(Channel, Message, Handler) ->
-  gen_server:call(?SERVER, {dispatch, Channel, Message, Handler}).
-
--spec dispatch(name(), channel(), payload(), handler()) -> ebus_ret().
-dispatch(Name, Channel, Message, Handler) ->
-  gen_server:call(Name, {dispatch, Channel, Message, Handler}).
-
-%%%===================================================================
-%%% gen_server callbacks
-%%%===================================================================
-
-%% @hidden
-init([Module, Opts]) ->
-  NewMod = resolve_module(Module),
-  State = parse_options(Opts, #state{module = NewMod}),
-  {ok, State}.
-
-%% @hidden
-handle_call({set_options, Opts}, _From, State) ->
-  NState = parse_options(Opts, State),
-  {reply, ok, NState};
-handle_call({sub, Ch, H},
-            _From, #state{module = ebus_dist, n = N, sub = Q} = S0) ->
-  Reply = ebus_dist:sub(Ch, H, dist_opts(N, Q)),
-  {reply, Reply, S0};
-handle_call({sub, Ch, H}, _From, #state{module = Mod} = S0) ->
-  Reply = Mod:sub(Ch, H),
-  {reply, Reply, S0};
-handle_call({unsub, Ch, H},
-            _From,
-            #state{module = ebus_dist, n = N, unsub = Q} = S0) ->
-  Reply = ebus_dist:unsub(Ch, H, dist_opts(N, Q)),
-  {reply, Reply, S0};
-handle_call({unsub, Ch, H}, _From, #state{module = Mod} = S0) ->
-  Reply = Mod:unsub(Ch, H),
-  {reply, Reply, S0};
-handle_call({pub, Ch, M},
-            _From,
-            #state{module = ebus_dist, n = N, pub = Q} = S0) ->
-  Reply = ebus_dist:pub(Ch, M, dist_opts(N, Q)),
-  {reply, Reply, S0};
-handle_call({pub, Ch, M}, _From, #state{module = Mod} = S0) ->
-  Reply = Mod:pub(Ch, M),
-  {reply, Reply, S0};
-handle_call({subscribers, Ch},
-            _From,
-            #state{module = ebus_dist, n = N, subscribers = Q} = S0) ->
-  Reply = ebus_dist:subscribers(Ch, dist_opts(N, Q)),
-  {reply, Reply, S0};
-handle_call({subscribers, Ch}, _From, #state{module = Mod} = S0) ->
-  Reply = Mod:subscribers(Ch),
-  {reply, Reply, S0};
-handle_call(channels,
-            _From,
-            #state{module = ebus_dist, n = N, channels = Q} = S0) ->
-  Reply = ebus_dist:channels(dist_opts(N, Q)),
-  {reply, Reply, S0};
-handle_call(channels, _From, #state{module = Mod} = S0) ->
-  Reply = Mod:channels(),
-  {reply, Reply, S0};
-handle_call({dispatch, Ch, M, H},
-            _From,
-            #state{module = ebus_dist, n = N, dispatch = Q} = S0) ->
-  Reply = ebus_dist:dispatch(Ch, M, H, dist_opts(N, Q)),
-  {reply, Reply, S0};
-handle_call({dispatch, Ch, M, H}, _From, #state{module = Mod} = S0) ->
-  Reply = Mod:dispatch(Ch, M, H),
-  {reply, Reply, S0}.
-
-%% @hidden
-handle_cast(_Request, State) ->
-  {noreply, State}.
-
-%% @hidden
-handle_info(_Info, State) ->
-  {noreply, State}.
-
-%% @hidden
-terminate(_Reason, _State) ->
-  ok.
-
-%% @private
-code_change(_OldVsn, State, _Extra) ->
-  {ok, State}.
-
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================
-
-%% @private
-parse_options([], State) ->
-  State;
-parse_options([{call_timeout, T} | Opts], State) when is_integer(T) ->
-  parse_options(Opts, State#state{call_timeout = T});
-parse_options([{n, N} | Opts], State) when is_integer(N) ->
-  parse_options(Opts, State#state{n = N});
-parse_options([{sub, Q} | Opts], State) when is_integer(Q) ->
-  parse_options(Opts, State#state{sub = Q});
-parse_options([{unsub, Q} | Opts], State) when is_integer(Q) ->
-  parse_options(Opts, State#state{unsub = Q});
-parse_options([{pub, Q} | Opts], State) when is_integer(Q) ->
-  parse_options(Opts, State#state{pub = Q});
-parse_options([{dispatch, Q} | Opts], State) when is_integer(Q) ->
-  parse_options(Opts, State#state{dispatch = Q});
-parse_options([{subscribers, Q} | Opts], State) when is_integer(Q) ->
-  parse_options(Opts, State#state{subscribers = Q});
-parse_options([{channels, Q} | Opts], State) when is_integer(Q) ->
-  parse_options(Opts, State#state{channels = Q});
-parse_options([_Opt | Opts], State) ->
-  parse_options(Opts, State).
-
-%% @private
-dist_opts(undefined, undefined) ->
-  [];
-dist_opts(N, undefined) ->
-  [{n, N}, {q, round(N/2)}];
-dist_opts(undefined, Q) ->
-  [{n, ((Q * 2) - 1)}, {q, Q}];
-dist_opts(N, Q) ->
-  [{n, N}, {q, Q}].
-
-%% @private
-resolve_module(Module) ->
-  case lists:member(Module, ?MODULES) of
-    true  -> Module;
-    false -> ?DEFAULT
+-spec dispatch(atom(), iodata(), term(), dispatch_opts()) -> ok.
+dispatch(Server, Topic, Message, Opts) ->
+  BinTopic = ebus_utils:to_bin(Topic),
+  Subscribers = case ebus_utils:keyfind(scope, Opts, local) of
+    local -> local_subscribers(Server, BinTopic);
+    _     -> subscribers(Server, BinTopic)
+  end,
+  DispatchFun = case ebus_utils:keyfind(dispatch_fun, Opts, nil) of
+    nil -> fun ebus_utils:rand_elem/1;
+    Fun -> Fun
+  end,
+  case Subscribers of
+    [] -> throw(no_subscribers_available);
+    _  -> DispatchFun(Subscribers) ! Message, ok
   end.
+
+%%%===================================================================
+%%% Application callbacks and functions
+%%%===================================================================
+
+-spec start() -> {ok, _} | {error, term()}.
+start() -> application:ensure_all_started(ebus).
+
+-spec stop() -> ok | {error, term()}.
+stop() -> application:stop(ebus).
+
+%% @hidden
+start(_StartType, _StartArgs) -> ebus_sup:start_link().
+
+%% @hidden
+stop(_State) -> ok.
+
+%%%===================================================================
+%%% Utilities
+%%%===================================================================
+
+-spec default_ps_server() -> ebus_ps.
+default_ps_server() -> ebus_ps.
+
+%%%===================================================================
+%%% Internal function
+%%%===================================================================
+
+%% @private
+server() ->
+  PubSub = application:get_env(ebus, pubsub, []),
+  ebus_utils:keyfind(name, PubSub, default_ps_server()).

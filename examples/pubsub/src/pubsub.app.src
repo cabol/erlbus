@@ -1,6 +1,6 @@
 %% Feel free to use, reuse and abuse the code in this file.
 
-{application, pub_sub,
+{application, pubsub,
  [
   {description, "ErlBus Pub/Sub example."},
   {vsn, "1"},
@@ -13,7 +13,7 @@
     ebus
    ]
   },
-  {mod, {pub_sub, []}},
+  {mod, {pubsub, []}},
   {env, []}
  ]
 }.

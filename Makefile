@@ -31,4 +31,4 @@ tests: compile
 	rm -rf test/*.beam
 
 shell: compile
-	erl -pa -pa $(BUILD_PATH) -s ebus -config ${CONFIG}
+	erl -pa $(BUILD_PATH) -s ebus -config ${CONFIG}

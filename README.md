@@ -200,7 +200,7 @@ So far, so good! Let's continue!
 ## Point-To-Point Example
 
 The great thing here is that you don't need something special to implement a point-to-point behavior.
-Is as simple as this:
+It is as simple as this:
 
 ```erlang
 ebus:dispatch("topic1", #{payload => "M1"}).
@@ -224,7 +224,7 @@ Dispatch options are:
  * `{dispatch_fun, fun(([term()]) -> term())}`: function to pick up a subscriber.
    If it isn't provided, a default random function is provided.
 
-To see how this function is implements, yo can go [HERE](./src/ebus.erl).
+To see how this function is implemented go [HERE](./src/ebus.erl).
 
 Let's see an example:
 

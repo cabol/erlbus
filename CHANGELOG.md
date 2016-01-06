@@ -1,8 +1,48 @@
 # Change Log
 
-## [Unreleased](https://github.com/cabol/erlbus/tree/HEAD)
+## [0.1.0](https://github.com/cabol/erlbus/tree/0.1.0) (2016-01-05)
+
+**Fixed bugs:**
+
+- Fix compatibility with Erlang/OTP 18 [\#17](https://github.com/cabol/erlbus/issues/17)
 
 **Merged pull requests:**
+
+- Fixed ebus\_handler to support handle\_fun/1 [\#28](https://github.com/cabol/erlbus/pull/28) ([cabol](https://github.com/cabol))
+
+- Fixed ebus\_handler to allow create new handlers/pools receiving a fun… [\#23](https://github.com/cabol/erlbus/pull/23) ([cabol](https://github.com/cabol))
+
+- Chat Example : Switching to cowboy 1.0 in order to support previous E… [\#22](https://github.com/cabol/erlbus/pull/22) ([ferigis](https://github.com/ferigis))
+
+- Chat Example : Unsubscribing from the channel when terminate [\#21](https://github.com/cabol/erlbus/pull/21) ([ferigis](https://github.com/ferigis))
+
+- Issue \#17: replace function now/0 by os:timestamp/0, for compatibilit… [\#18](https://github.com/cabol/erlbus/pull/18) ([cabol](https://github.com/cabol))
+
+- Adding Chat Example [\#15](https://github.com/cabol/erlbus/pull/15) ([ferigis](https://github.com/ferigis))
+
+- Fixes to ebus\_pg2 module. [\#14](https://github.com/cabol/erlbus/pull/14) ([cabol](https://github.com/cabol))
+
+- Refactoring functions: get\_subscribers -\> subscribers and get\_channel… [\#13](https://github.com/cabol/erlbus/pull/13) ([cabol](https://github.com/cabol))
+
+- Fixed 'ebus:sub/2,3' and 'ebus:unsub/2,3' to receive either a single … [\#12](https://github.com/cabol/erlbus/pull/12) ([cabol](https://github.com/cabol))
+
+- Code Dialyzed. Added pool\_hanler to pub\_sub example. [\#11](https://github.com/cabol/erlbus/pull/11) ([cabol](https://github.com/cabol))
+
+- Fixed indentation issue. [\#10](https://github.com/cabol/erlbus/pull/10) ([cabol](https://github.com/cabol))
+
+- Cabol.version 0.1 [\#9](https://github.com/cabol/erlbus/pull/9) ([cabol](https://github.com/cabol))
+
+- Fixed indentation in .app.src file from pub\_sub example. Added image … [\#8](https://github.com/cabol/erlbus/pull/8) ([cabol](https://github.com/cabol))
+
+- Fixed indentation. [\#7](https://github.com/cabol/erlbus/pull/7) ([cabol](https://github.com/cabol))
+
+- Added pub\_sub example. Fixed build files, updated erlang.mk. [\#6](https://github.com/cabol/erlbus/pull/6) ([cabol](https://github.com/cabol))
+
+- Added rebar.config.script to fetch dependencies on-demand when using … [\#5](https://github.com/cabol/erlbus/pull/5) ([cabol](https://github.com/cabol))
+
+- Added status function to ebus\_handler module. Fixed README. [\#4](https://github.com/cabol/erlbus/pull/4) ([cabol](https://github.com/cabol))
+
+- Fixed anonymous handler in ebus\_handler. Fixed documentation. Added C… [\#3](https://github.com/cabol/erlbus/pull/3) ([cabol](https://github.com/cabol))
 
 - Cabol.version 0.1 [\#2](https://github.com/cabol/erlbus/pull/2) ([cabol](https://github.com/cabol))
 

@@ -2,7 +2,7 @@
 ErlBus Examples
 ===============
 
- *  [pub_sub](./pub_sub):
+ *  [pubsub](./pubsub):
     basic example to show the use of Pub/Sub pattern.
  *  [chat](./chat):
     basic chat example using websockets.

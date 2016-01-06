@@ -1,62 +1,34 @@
-PROJECT = ebus
+REBAR = ./rebar3
+
+BUILD_PATH = ./_build/default/lib/*/ebin
 
 CONFIG ?= test/test.config
 
-ifdef EBUS_DIST
-DEPS = gproc poolboy riak_core
-else
-DEPS = gproc poolboy
-endif
+CT_OPTS = -cover test/cover.spec -erl_args -config ${CONFIG}
+CT_SUITES = ebus_ps_local_SUITE ebus_ps_SUITE ebus_handler_SUITE ebus_dist_SUITE
 
-TEST_DEPS =
+.PHONY: all compile clean distclean dialyze tests shell
 
-dep_gproc     = git https://github.com/uwiger/gproc.git    0.5
-dep_poolboy   = git https://github.com/devinus/poolboy.git 1.5.1
-dep_riak_core = git https://github.com/basho/riak_core     2.1.1
+all: compile
 
-DIALYZER_DIRS := ebin/
-DIALYZER_OPTS := --verbose --statistics -Werror_handling \
-                 -Wrace_conditions #-Wunmatched_returns
+compile:
+	$(REBAR) compile
 
-include erlang.mk
+clean:
+	rm -rf ebin/* test/*.beam logs log
+	$(REBAR) clean
 
-ERLC_OPTS += +debug_info +fail_on_warning
+distclean: clean
+	$(REBAR) clean --all
+	rm -rf _build logs log
 
-TEST_ERLC_OPTS += +debug_info +fail_on_warning
-CT_SUITES = ebus_pg2_gproc ebus_local
-CT_OPTS += -cover test/cover.spec -erl_args -config ${CONFIG} -ebus ebus_dist all
+dialyze:
+	$(REBAR) dialyzer
 
-CT_SUITES1 = ebus_pg2_gproc ebus_local
-CT_SUITES2 = ebus_dist
-CT_OPTS1 += -cover test/cover.spec -erl_args -config ${CONFIG}
-CT_OPTS2 += -cover test/cover.spec -erl_args -config ${CONFIG} -ebus ebus_dist all
+tests: compile
+	mkdir -p logs
+	ct_run -dir test -suite $(CT_SUITES) -pa $(BUILD_PATH) -logdir logs $(CT_OPTS)
+	rm -rf test/*.beam
 
-SHELL_OPTS = -name ${PROJECT}@`hostname` -s ${PROJECT} -config ${CONFIG}
-
-test1:
-	mkdir -p logs/ ; \
-	$(gen_verbose) $(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES1)) $(CT_OPTS1)
-
-test2:
-	mkdir -p logs/ ; \
-	$(gen_verbose) $(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES2)) $(CT_OPTS2)
-
-test: test-build test1 test2
-	$(gen_verbose) rm -f test/*.beam
-
-test-shell: build-ct-suites app
-	erl -pa ebin -pa deps/*/ebin -pa test -s ebus -config ${CONFIG}
-
-devtests: tests
-	open logs/index.html
-
-quicktests: app build-ct-suites
-	@if [ -d "test" ] ; \
-	then \
-		mkdir -p logs/ ; \
-		$(CT_RUN) -suite $(addsuffix _SUITE,$(CT_SUITES)) $(CT_OPTS) ; \
-	fi
-	$(gen_verbose) rm -f test/*.beam
-
-erldocs: app
-	erldocs . -o doc/
+shell: compile
+	erl -pa $(BUILD_PATH) -s ebus -config ${CONFIG}

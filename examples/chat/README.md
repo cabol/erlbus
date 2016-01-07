@@ -9,10 +9,10 @@ To build the example, run the following command:
 $ make
 ```
 
-To start the release in the foreground:
+To start the example:
 
 ``` bash
-$ ./_rel/chat_release/bin/chat_release console
+$ make run
 ```
 
 Then point your browser at [http://localhost:8080](http://localhost:8080).

@@ -1,7 +1,23 @@
-PROJECT = chat
-DEPS = cowboy erlbus jiffy
-dep_cowboy = git https://github.com/ninenines/cowboy 1.0.2
-dep_erlbus = git https://github.com/cabol/erlbus master
-dep_jiffy = git https://github.com/davisp/jiffy master
+REBAR = ../../rebar3
 
-include erlang.mk
+BUILD_PATH = ./_build/default/lib/*/ebin
+
+CONFIG ?= config/sys.config
+
+.PHONY: all compile clean distclean run
+
+all: compile
+
+compile:
+	$(REBAR) compile
+	make -C _build/default/lib/jiffy
+
+clean:
+	$(REBAR) clean
+
+distclean: clean
+	$(REBAR) clean --all
+	rm -rf _build *.lock
+
+run: all
+	erl -pa $(BUILD_PATH) -s chat_app -config ${CONFIG}

@@ -17,9 +17,9 @@ init(_, _Req, _Opts) ->
   {upgrade, protocol, cowboy_websocket}.
 
 websocket_init(_Type, Req, _Opts) ->
-  % Create the handler from our custom handler
-  Handler = ebus_handler:new(chat_erlbus_handler, self()),
-  ebus:sub(?CHATROOM_NAME, Handler),
+  % Create the handler from our custom callback
+  Handler = ebus_process:spawn_handler(fun chat_erlbus_handler:handle_msg/2, self()),
+  ebus:sub(Handler, ?CHATROOM_NAME),
   {ok, Req, #state{name = get_name(Req), handler = Handler}, ?TIMEOUT}.
 
 websocket_handle({text, Msg}, Req, State) ->
@@ -35,7 +35,7 @@ websocket_info(_Info, Req, State) ->
 
 websocket_terminate(_Reason, _Req, State) ->
   % Unsubscribe the handler
-  ebus:unsub(?CHATROOM_NAME, State#state.handler),
+  ebus:unsub(State#state.handler, ?CHATROOM_NAME),
   ok.
 
 %% Private methods

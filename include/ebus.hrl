@@ -1,19 +1,17 @@
 %%%-------------------------------------------------------------------
 %%% @doc
 %%% Common definitions and macros.
-%%%
+%%% <ul>
 %%% Messages were taken from the originals:
-%%% * `Phoenix.Socket.Message`
-%%% * `Phoenix.Socket.Reply`
-%%% * `Phoenix.Socket.Broadcast`
+%%% <li>`Phoenix.Socket.Message'.</li>
+%%% <li>`Phoenix.Socket.Reply'.</li>
+%%% <li>`Phoenix.Socket.Broadcast'.</li>
+%%% </ul>
 %%%
-%%% @see <a href="https://github.com/phoenixframework/phoenix"></a>
+%%% @reference See
+%%% <a href="https://github.com/phoenixframework/phoenix">Phoenix</a>
 %%% @end
 %%%-------------------------------------------------------------------
-
-%%%===================================================================
-%%% Message specs
-%%%===================================================================
 
 %% Message Type
 %%
@@ -21,18 +19,17 @@
 %%
 %% The message format requires the following keys:
 %%
-%% * `topic`: The string topic or `topic:subtopic` pair namespace,
-%%   for example <<"messages">>, <<"messages:123">>
-%% * `event`: The string event name, for example <<"phx_join">>
-%% * `payload`: The message payload
-%% * `ref`: The unique string ref
+%% * `topic': The string topic or `topic:subtopic' pair namespace,
+%%   for example `<<"messages">>', `<<"messages:123">>'
+%% * `event': The string event name, for example `<<"ebus_join">>'
+%% * `payload': The message payload
+%% * `ref': The unique string ref
 -record(message, {
   topic   = nil :: binary() | nil,
   event   = nil :: binary() | nil,
   payload = nil :: term(),
   ref     = nil :: binary() | nil
 }).
-
 -type message() :: #message{}.
 
 %% Reply Type
@@ -41,18 +38,17 @@
 %%
 %% The message format requires the following keys:
 %%
-%% * `topic`: The string topic or `topic:subtopic` pair namespace,
-%%   for example <<"messages">>, <<"messages:123">>
-%% * `status`: The reply status as an atom
-%% * `payload`: The message payload
-%% * `ref`: The unique string ref
+%% * `topic': The string topic or `topic:subtopic' pair namespace,
+%%   for example `<<"messages">>', `<<"messages:123">>'
+%% * `status': The reply status as an atom
+%% * `payload': The message payload
+%% * `ref': The unique string ref
 -record(reply, {
   topic   = nil :: binary() | nil,
   status  = nil :: atom(),
   payload = nil :: term(),
   ref     = nil :: binary() | nil
 }).
-
 -type reply() :: #reply{}.
 
 %% Broadcast Type
@@ -61,16 +57,15 @@
 %%
 %% The message format requires the following keys:
 %%
-%% * `topic`: The string topic or `topic:subtopic` pair namespace,
-%%   for example <<"messages">>, <<"messages:123">>
-%% * `event`: The string event name, for example <<"phx_join">>
-%% * `payload`: The message payload
+%% * `topic': The string topic or `topic:subtopic` pair namespace,
+%%   for example `<<"messages">>', `<<"messages:123">>'
+%% * `event': The string event name, for example `<<"ebus_join">>'
+%% * `payload': The message payload
 -record(broadcast, {
   topic   = nil :: binary() | nil,
   event   = nil :: binary() | nil,
   payload = nil :: term()
 }).
-
 -type broadcast() :: #broadcast{}.
 
 %%%===================================================================

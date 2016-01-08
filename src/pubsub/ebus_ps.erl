@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%% This is an Erlang clone of the original `Phoenix.PubSub` module.
+%%% This is an Erlang clone of the original `Phoenix.PubSub' module.
 %%% Copyright (c) 2014 Chris McCord
-%%% @see <a href="https://hexdocs.pm/phoenix/Phoenix.PubSub.html"></a>
-%%% @see <a href="https://github.com/phoenixframework/phoenix"></a>
+%%% @reference See
+%%% <a href="https://github.com/phoenixframework/phoenix">Phoenix</a>
 %%% @end
 %%%-------------------------------------------------------------------
 -module(ebus_ps).
@@ -20,6 +20,12 @@
 ]).
 
 %%%===================================================================
+%%% Types
+%%%===================================================================
+
+-type options() :: ebus_ps_local:options().
+
+%%%===================================================================
 %%% API
 %%%===================================================================
 
@@ -30,26 +36,31 @@ subscribe(Server, Pid, Topic) ->
 %% @doc
 %% Subscribes the pid to the PubSub adapter's topic.
 %%
-%% * `Server`: The Pid registered name of the server
-%% * `Pid`: The subscriber pid to receive pubsub messages
-%% * `Topic`: The topic to subscribe to, ie: `"users:123"`
-%% * `Opts`: The optional list of options. See below.
+%% <ul>
+%% <li>`Server': The Pid registered name of the server.</li>
+%% <li>`Pid': The subscriber pid to receive pubsub messages.</li>
+%% <li>`Topic': The topic to subscribe to, ie: `"users:123"'.</li>
+%% <li>`Opts': The optional list of options. See below.</li>
+%% </ul>
 %%
-%% Options:
-%%
-%% * `link`: links the subscriber to the pubsub adapter
-%% * `fastlane`: Provides a fastlane path for the broadcasts for
-%%   `%Phoenix.Socket.Broadcast{}` events. The fastlane process is
-%%   notified of a cached message instead of the normal subscriber.
-%%   Fastlane handlers must implement `fastlane/1` callbacks which accepts
-%%   a `Phoenix.Socket.Broadcast` structs and returns a fastlaned format
-%%   for the handler. For example:
-%%
+%% <b>Options:</b>
+%% <br/>
+%% <ul>
+%% <li>`link': links the subscriber to the pubsub adapter.</li>
+%% <li>`fastlane': Provides a fastlane path for the broadcasts for
+%% `broadcast()' events. The fastlane process is notified of a cached
+%% message instead of the normal subscriber. Fastlane handlers must
+%% implement `fastlane/1' callbacks which accepts a `broadcast()' struct
+%% and returns a fastlaned format for the handler. For example:</li>
+%% <br/>
+%%   ```
 %%     ebus_ps:subscribe(
 %%       my_pubsub_server, self(), <<"topic1">>,
-%%       [{fastlane, {FastPid, my_serializer, [<<"event1">>]}).
+%%       [{fastlane, {FastPid, my_serializer, [<<"event1">>]}).`
+%%   '''
+%% </ul>
 %% @end
--spec subscribe(atom(), pid(), binary(), [term()]) -> ok | {error, term()}.
+-spec subscribe(atom(), pid(), binary(), options()) -> ok | {error, term()}.
 subscribe(Server, Pid, Topic, Opts) when is_atom(Server) ->
   call(Server, subscribe, [Pid, Topic, Opts]).
 
@@ -68,7 +79,7 @@ broadcast(Server, Topic, Msg) when is_atom(Server) ->
   call(Server, broadcast, [none, Topic, Msg]).
 
 %% @doc
-%% Broadcasts message to all but `FromPid` on given topic.
+%% Broadcasts message to all but `FromPid' on given topic.
 %% @end
 -spec broadcast_from(atom(), pid(), binary(), term()) -> ok | {error, term()}.
 broadcast_from(Server, FromPid, Topic, Msg)
@@ -78,13 +89,17 @@ broadcast_from(Server, FromPid, Topic, Msg)
 %% @doc
 %% Returns a set of subscribers pids for the given topic.
 %%
-%% * `Server`: The registered server name or pid
-%% * `Topic`: The string topic, for example <<"users:123">>
+%% <ul>
+%% <li>`Server': The registered server name or pid.</li>
+%% <li>`Topic': The string topic, for example `<<"users:123">>'.</li>
+%% </ul>
 %%
-%% Examples:
+%% Example:
 %%
+%% ```
 %% > subscribers(pubsub_server, <<"foo">>).
 %% [<0.48.0>, <0.49.0>]
+%% '''
 %% @end
 -spec subscribers(atom(), binary()) -> [pid()].
 subscribers(Server, Topic) when is_atom(Server) ->

@@ -21,3 +21,4 @@ logs
 data
 .rebar
 *.sh
+doc

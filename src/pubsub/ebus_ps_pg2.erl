@@ -1,13 +1,14 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%% This is an Erlang clone of the original `Phoenix.PubSub.PG2`
+%%% This is an Erlang clone of the original `Phoenix.PubSub.PG2'
 %%% module.
 %%% Copyright (c) 2014 Chris McCord
 %%%
 %%% Phoenix PubSub adapter based on PG2.
-%%% To use it as your PubSub adapter, simply add it to your Endpoint's config
-%%% file (see e.g.: test/test.config):
+%%% To use it as your PubSub adapter, simply add it to your
+%%% Endpoint's config file (see e.g.: test/test.config):
 %%%
+%%% ```
 %%% [
 %%%  {ebus,
 %%%   [
@@ -21,16 +22,21 @@
 %%%   ]
 %%%  }
 %%% ].
+%%% '''
 %%%
 %%% Options:
-%%% * `name`: The name to register the PubSub processes, ie: `ebus_ps`
-%%% * `pool_size`: Both the size of the local pubsub server pool and subscriber
-%%%   shard size. Defaults `1`. A single pool is often enough for most use
-%%%   cases, but for high subscriber counts on a single topic or greater than 1M
-%%%   clients, a pool size equal to the number of schedulers (cores) is a well
-%%%   rounded size.
+%%% <ul>
+%%% <li>`name': The name to register the PubSub processes,
+%%% ie: `ebus_ps'.</li>
+%%% <li>`pool_size': Both the size of the local pubsub server pool and
+%%% subscriber shard size. Defaults `1'. A single pool is often enough
+%%% for most use cases, but for high subscriber counts on a single
+%%% topic or greater than 1M clients, a pool size equal to the number
+%%% of schedulers (cores) is a well rounded size.</li>
+%%% </ul>
 %%%
-%%% @see <a href="https://github.com/phoenixframework/phoenix"></a>
+%%% @reference See
+%%% <a href="https://github.com/phoenixframework/phoenix">Phoenix</a>
 %%% @end
 %%%-------------------------------------------------------------------
 -module(ebus_ps_pg2).

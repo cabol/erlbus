@@ -1,20 +1,21 @@
 %%%-------------------------------------------------------------------
 %%% @doc
 %%% This is an Erlang clone of the original
-%%% `Phoenix.Transports.Serializer` module.
+%%% `Phoenix.Transports.Serializer' module.
 %%% Copyright (c) 2014 Chris McCord
-%%% @see <a href="https://github.com/phoenixframework/phoenix"></a>
+%%% @reference See
+%%% <a href="https://github.com/phoenixframework/phoenix">Phoenix</a>
 %%% @end
 %%%-------------------------------------------------------------------
 -module(ebus_serializer).
 
 -include("ebus.hrl").
 
-%% @doc Translates a `broadcast()` to fastlane format
+%% Translates a `broadcast()' to fastlane format
 -callback fastlane(broadcast()) -> term().
 
-%% @doc Encodes `message()` to transport representation
+%% Encodes `message()' to transport representation
 -callback encode(message() | reply()) -> term().
 
-%% @doc Decodes data into `message()` spec
+%% Decodes data into `message()' spec
 -callback decode(binary(), Opts :: [{atom(), term()}]) -> message().

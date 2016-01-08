@@ -1,7 +1,8 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%% Main entry point for `ebus` functions.
-%%% This is also a wrapper for `ebus_ps` module.
+%%% Main entry point for `ebus' functions.
+%%% This is also a wrapper for `ebus_ps' module.
+%%% @see ebus_ps
 %%% @end
 %%%-------------------------------------------------------------------
 -module(ebus).
@@ -22,19 +23,29 @@
 -export([start/2, stop/1]).
 
 %% Utilities
--export([default_ps_server/0]).
+-export([server/0, default_ps_server/0]).
 
 %%%===================================================================
 %%% Types
 %%%===================================================================
 
 % Dispatch options
+-type topic()         :: iodata().
+-type handler()       :: pid().
 -type dispatch_fun()  :: fun(([term()]) -> term()).
 -type dispatch_opt()  :: {scope, local | global} |
                          {dispatch_fun, dispatch_fun()}.
 -type dispatch_opts() :: [dispatch_opt()].
+-type options()       :: ebus_ps_local:options().
 
--export_type([dispatch_opts/0]).
+% Exported types
+-export_type([
+  topic/0,
+  handler/0,
+  dispatch_fun/0,
+  dispatch_opts/0,
+  options/0
+]).
 
 %%%===================================================================
 %%% PubSub API
@@ -48,7 +59,42 @@ sub(Handler, Topic) ->
 sub(Server, Handler, Topic) ->
   sub(Server, Handler, Topic, []).
 
--spec sub(atom(), pid(), iodata(), [term()]) -> ok | {error, term()}.
+%% @doc
+%% Subscribes the `Handler' given `Topic'.
+%%
+%% <ul>
+%% <li>`Server': The Pid registered name of the server.</li>
+%% <li>`Handler': The subscriber pid to receive pubsub messages.</li>
+%% <li>`Topic': The topic to subscribe to, ie: `"users:123"'.</li>
+%% <li>`Opts': The optional list of options. See below.</li>
+%% </ul>
+%%
+%% <b>Options:</b>
+%% <br/>
+%% <ul>
+%% <li>`{link, _}': links the subscriber to the pubsub adapter.</li>
+%% <li>`{fastlane, ebus_ps_local:fastlane()}': Provides a fastlane path
+%% for the broadcasts for `broadcast()' events. The fastlane process is
+%% notified of a cached message instead of the normal subscriber.
+%% Fastlane handlers must implement `fastlane/1' callbacks which accepts a
+%% `broadcast()' struct and returns a fastlaned format for the handler.</li>
+%% </ul>
+%%
+%% Examples:
+%%
+%% ```
+%% > ebus:sub(self(), <<"foo">>).
+%% ok
+%% > ebus:sub(ebus_ps, self(), <<"foo">>).
+%% ok
+%% > ebus:sub(ebus_ps, self(), <<"foo">>, []).
+%% ok
+%% > ebus:sub(ebus_ps, self(), <<"foo">>,
+%%     [{fastlane, {FastPid, my_serializer, [<<"event1">>]}]).
+%% ok
+%% '''
+%% @end
+-spec sub(atom(), handler(), topic(), options()) -> ok | {error, term()}.
 sub(Server, Handler, Topic, Opts) ->
   ebus_ps:subscribe(Server, Handler, ebus_utils:to_bin(Topic), Opts).
 
@@ -56,7 +102,25 @@ sub(Server, Handler, Topic, Opts) ->
 unsub(Handler, Topic) ->
   unsub(server(), Handler, Topic).
 
--spec sub(atom(), pid(), iodata()) -> ok | {error, term()}.
+%% @doc
+%% Unsubscribes the given `Handler' from the `Topic'.
+%%
+%% <ul>
+%% <li>`Server': The registered server name or pid.</li>
+%% <li>`Handler': The subscriber pid.</li>
+%% <li>`Topic': The string topic, for example `<<"users:123">>'.</li>
+%% </ul>
+%%
+%% Example:
+%%
+%% ```
+%% > ebus:unsub(self(), <<"foo">>).
+%% ok
+%% > ebus:unsub(ebus_ps, self(), <<"foo">>).
+%% ok
+%% '''
+%% @end
+-spec unsub(atom(), handler(), topic()) -> ok | {error, term()}.
 unsub(Server, Handler, Topic) ->
   ebus_ps:unsubscribe(Server, Handler, ebus_utils:to_bin(Topic)).
 
@@ -64,7 +128,25 @@ unsub(Server, Handler, Topic) ->
 pub(Topic, Message) ->
   pub(server(), Topic, Message).
 
--spec pub(atom(), iodata(), term()) -> ok | {error, term()}.
+%% @doc
+%% Sends a message to all subscribers of a topic.
+%%
+%% <ul>
+%% <li>`Server': The registered server name or pid.</li>
+%% <li>`Topic': The string topic, for example `<<"users:123">>'.</li>
+%% <li>`Message': Any erlang term.</li>
+%% </ul>
+%%
+%% Examples:
+%%
+%% ```
+%% > ebus:pub("bar", #{topic => "foo", payload => "hi"}).
+%% ok
+%% > ebus:pub(ebus_ps, "bar", #{topic => "foo", payload => "hi"}).
+%% ok
+%% '''
+%% @end
+-spec pub(atom(), topic(), term()) -> ok | {error, term()}.
 pub(Server, Topic, Message) ->
   ebus_ps:broadcast(Server, ebus_utils:to_bin(Topic), Message).
 
@@ -72,30 +154,49 @@ pub(Server, Topic, Message) ->
 pub_from(From, Topic, Message) ->
   pub_from(server(), From, Topic, Message).
 
--spec pub_from(atom(), pid(), iodata(), term()) -> ok | {error, term()}.
-pub_from(Server, From, Topic, Message) ->
-  ebus_ps:broadcast_from(Server, From, ebus_utils:to_bin(Topic), Message).
+%% @doc
+%% Same as `pub/3' but message is not sent to `FromHandler'.
+%% @end
+-spec pub_from(atom(), handler(), topic(), term()) -> ok | {error, term()}.
+pub_from(Server, FromHandler, Topic, Message) ->
+  BinTopic = ebus_utils:to_bin(Topic),
+  ebus_ps:broadcast_from(Server, FromHandler, BinTopic, Message).
 
 %% @equiv subscribers(server(), Topic)
 subscribers(Topic) ->
   subscribers(server(), Topic).
 
--spec subscribers(atom(), iodata()) -> [pid()].
+%% @doc
+%% Returns a set of all subscribers handlers (local and global)
+%% for the given `Topic'.
+%%
+%% <ul>
+%% <li>`Server': The registered server name or pid.</li>
+%% <li>`Topic': The string topic, for example `<<"users:123">>'.</li>
+%% </ul>
+%%
+%% Example:
+%%
+%% ```
+%% > ebus:subscribers(ebus_ps, <<"foo">>).
+%% [<0.48.0>, <0.49.0>]
+%% '''
+%% @end
+-spec subscribers(atom(), topic()) -> [pid()].
 subscribers(Server, Topic) ->
-  Nodes = nodes(),
   BinTopic = ebus_utils:to_bin(Topic),
-  RemoteSubscribers = lists:foldl(
-    fun(Node, Acc) ->
-      Acc ++ rpc:call(Node, ?MODULE, local_subscribers, [Server, BinTopic])
-    end, [], Nodes
-  ),
-  RemoteSubscribers ++ local_subscribers(Server, BinTopic).
+  {ResL, _} = rpc:multicall(?MODULE, local_subscribers, [Server, BinTopic]),
+  lists:merge(ResL).
 
 %% @equiv local_subscribers(server(), Topic)
 local_subscribers(Topic) ->
   local_subscribers(server(), Topic).
 
--spec local_subscribers(atom(), iodata()) -> [pid()].
+%% @doc
+%% Same as `subscribers/2' but only local subscribers handlers for the
+%% given `Topic' are returned.
+%% @end
+-spec local_subscribers(atom(), topic()) -> [pid()].
 local_subscribers(Server, Topic) ->
   ebus_ps:subscribers(Server, ebus_utils:to_bin(Topic)).
 
@@ -103,20 +204,31 @@ local_subscribers(Server, Topic) ->
 topics() ->
   topics(server()).
 
+%% @doc
+%% Returns the list of all topics (local and global) in use.
+%% This is an expensive and private operation. DO NOT USE IT IN PROD.
+%% <br/>
+%% Example:
+%% <br/>
+%% ```
+%% > ebus:topics().
+%% [<<"foo">>, <<"bar">>]
+%% > ebus:topics(ebus_ps).
+%% [<<"foo">>, <<"bar">>]
+%% '''
+%% @end
 -spec topics(atom()) -> [binary()].
 topics(Server) ->
-  Nodes = nodes(),
-  RemoteTopics = lists:foldl(
-    fun(Node, Acc) ->
-      Acc ++ rpc:call(Node, ?MODULE, local_topics, [Server])
-    end, [], Nodes
-  ),
-  lists:usort(RemoteTopics ++ local_topics(Server)).
+  {ResL, _} = rpc:multicall(?MODULE, local_topics, [Server]),
+  lists:usort(lists:merge(ResL)).
 
 %% @equiv local_topics(server())
 local_topics() ->
   local_topics(server()).
 
+%% @doc
+%% Same as `topics/1' but only local topics are returned.
+%% @end
 -spec local_topics(atom()) -> [binary()].
 local_topics(Server) ->
   ebus_ps:list(Server).
@@ -129,7 +241,38 @@ dispatch(Topic, Message) ->
 dispatch(Topic, Message, Opts) ->
   dispatch(server(), Topic, Message, Opts).
 
--spec dispatch(atom(), iodata(), term(), dispatch_opts()) -> ok.
+%% @doc
+%% Sends a message only to one subscriber handler of the `Topic'.
+%%
+%% <ul>
+%% <li>`Server': The registered server name or pid.</li>
+%% <li>`Topic': The string topic, for example `<<"users:123">>'.</li>
+%% <li>`Message': Any erlang term.</li>
+%% <li>`Opts': The optional list of options. See below.</li>
+%% </ul>
+%%
+%% <b>Options:</b>
+%% <br/>
+%% <ul>
+%% <li>`{scope, local | global}': define if the message must be delivered
+%% to a local or global (any) process. Default is `local'.</li>
+%% <li>`{dispatch_fun, dispatch_fun()}': allows to pass a function to
+%% choose a subscriber from the current subscribers handlers to a topic.</li>
+%% </ul>
+%%
+%% Examples:
+%%
+%% ```
+%% > ebus:dispatch("bar", #{topic => "foo", payload => "hi"}).
+%% ok
+%% > ebus:dispatch("bar", #{topic => "foo", payload => "hi"}, []).
+%% ok
+%% > ebus:dispatch(ebus_ps, "bar", "my message",
+%%     [{scope, global}, {dispatch_fun, fun([H | _]) -> H end}]).
+%% ok
+%% '''
+%% @end
+-spec dispatch(atom(), topic(), term(), dispatch_opts()) -> ok.
 dispatch(Server, Topic, Message, Opts) ->
   BinTopic = ebus_utils:to_bin(Topic),
   Subscribers = case ebus_utils:keyfind(scope, Opts, local) of
@@ -149,9 +292,11 @@ dispatch(Server, Topic, Message, Opts) ->
 %%% Application callbacks and functions
 %%%===================================================================
 
+%% @doc Starts `ebus' application.
 -spec start() -> {ok, _} | {error, term()}.
 start() -> application:ensure_all_started(ebus).
 
+%% @doc Stops `ebus' application.
 -spec stop() -> ok | {error, term()}.
 stop() -> application:stop(ebus).
 
@@ -165,14 +310,12 @@ stop(_State) -> ok.
 %%% Utilities
 %%%===================================================================
 
--spec default_ps_server() -> ebus_ps.
-default_ps_server() -> ebus_ps.
-
-%%%===================================================================
-%%% Internal function
-%%%===================================================================
-
-%% @private
+%% @doc Returns the registered `ebus' server name.
+-spec server() -> atom().
 server() ->
   PubSub = application:get_env(ebus, pubsub, []),
   ebus_utils:keyfind(name, PubSub, default_ps_server()).
+
+%% @doc Returns default `ebus' server name: `ebus_ps'.
+-spec default_ps_server() -> ebus_ps.
+default_ps_server() -> ebus_ps.

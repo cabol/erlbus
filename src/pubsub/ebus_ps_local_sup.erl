@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% @doc
 %%% This is an Erlang clone of the original
-%%% `Phoenix.PubSub.LocalSupervisor` module.
+%%% `Phoenix.PubSub.LocalSupervisor' module.
 %%% Copyright (c) 2014 Chris McCord
 %%%
 %%% Local PubSub server supervisor.
@@ -9,11 +9,12 @@
 %%% Used by PubSub adapters to handle "local" subscriptions.
 %%% Defines an ets dispatch table for routing subscription
 %%% requests. Extendable by PubSub adapters by providing
-%%% a list of `dispatch_rules` to extend the dispatch table.
+%%% a list of `dispatch_rules' to extend the dispatch table.
 %%%
-%%% @see `ebus_ps_pg2` for example usage.
+%%% @see ebus_ps_pg2.
 %%%
-%%% @see <a href="https://github.com/phoenixframework/phoenix"></a>
+%%% @reference See
+%%% <a href="https://github.com/phoenixframework/phoenix">Phoenix</a>
 %%% @end
 %%%-------------------------------------------------------------------
 -module(ebus_ps_local_sup).
@@ -26,7 +27,10 @@
 %% Supervisor callbacks
 -export([init/1]).
 
-%% Types
+%%%===================================================================
+%%% Types
+%%%===================================================================
+
 -type command()       :: broadcast | subscribe | unsubscribe.
 -type dispatch_rule() :: {command(), module(), [term()]}.
 

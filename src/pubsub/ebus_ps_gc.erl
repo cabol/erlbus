@@ -1,9 +1,10 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%% This is an Erlang clone of the original `Phoenix.PubSub.GC`
+%%% This is an Erlang clone of the original `Phoenix.PubSub.GC'
 %%% module.
 %%% Copyright (c) 2014 Chris McCord
-%%% @see <a href="https://github.com/phoenixframework/phoenix"></a>
+%%% @reference See
+%%% <a href="https://github.com/phoenixframework/phoenix">Phoenix</a>
 %%% @end
 %%%-------------------------------------------------------------------
 -module(ebus_ps_gc).
@@ -34,8 +35,10 @@
 %% @doc
 %% Starts the server.
 %%
-%% * `ServerName`: The name to register the server under
-%% * `LocalName`: The name of the local table
+%% <ul>
+%% <li>`ServerName': The name to register the server under.</li>
+%% <li>`LocalName': The name of the local table.</li>
+%% </ul>
 %% @end
 -spec start_link(atom(), atom()) -> gen:start_ret().
 start_link(ServerName, LocalName) ->
@@ -46,12 +49,17 @@ start_link(ServerName, LocalName) ->
 %% @doc
 %% Force table clean up because the given pid is down asynchronously.
 %%
-%% * `GCServer`: The registered server name or pid
-%% * `Pid`: The subscriber pid
+%% <ul>
+%% <li>`GCServer': The registered server name or pid.</li>
+%% <li>`Pid': The subscriber pid.</li>
+%% </ul>
 %%
 %% Examples:
+%%
+%% ```
 %% > down(gc_server, self()).
 %% ok
+%%% '''
 %% @end
 -spec down(atom(), pid()) -> ok.
 down(GCServer, Pid) when is_atom(GCServer) ->

@@ -1,9 +1,10 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%% This is an Erlang clone of the original `Phoenix.PubSub.PG2Server`
+%%% This is an Erlang clone of the original `Phoenix.PubSub.PG2Server'
 %%% module.
 %%% Copyright (c) 2014 Chris McCord
-%%% @see <a href="https://github.com/phoenixframework/phoenix"></a>
+%%% @reference See
+%%% <a href="https://github.com/phoenixframework/phoenix">Phoenix</a>
 %%% @end
 %%%-------------------------------------------------------------------
 -module(ebus_ps_pg2_server).

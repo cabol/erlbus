@@ -1,9 +1,10 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%% This is an Erlang clone of the original `Phoenix.PubSub.Local`
+%%% This is an Erlang clone of the original `Phoenix.PubSub.Local'
 %%% module.
 %%% Copyright (c) 2014 Chris McCord
-%%% @see <a href="https://github.com/phoenixframework/phoenix"></a>
+%%% @reference See
+%%% <a href="https://github.com/phoenixframework/phoenix">Phoenix</a>
 %%% @end
 %%%-------------------------------------------------------------------
 -module(ebus_ps_local).
@@ -40,13 +41,30 @@
 -include("ebus.hrl").
 
 %%%===================================================================
+%%% Types
+%%%===================================================================
+
+%% PubSub options
+-type fastlane() :: {
+  FastlanePid     :: pid(),
+  Serializer      :: module(),
+  EventIntercepts :: [term()]
+}.
+-type option()  :: {link, _} | {fastlane, fastlane()}.
+-type options() :: [option()].
+
+-export_type([fastlane/0, option/0, options/0]).
+
+%%%===================================================================
 %%% API
 %%%===================================================================
 
 %% @doc
 %% Starts the server.
 %%
-%% * `ServerName`: The name to register the server under
+%% <ul>
+%% <li>`ServerName': The name to register the server under.</li>
+%% </ul>
 %% @end
 -spec start_link(atom(), atom()) -> gen:start_ret().
 start_link(ServerName, GCName) ->
@@ -61,30 +79,35 @@ subscribe(Server, PoolSize, Pid, Topic) ->
 %% @doc
 %% Subscribes the pid to the topic.
 %%
-%% * `Server`: The registered server name or pid
-%% * `Pid`: The subscriber pid
-%% * `Topic`: The string topic, for example <<"users:123">>
-%% * `Opts`: The optional list of options.
+%% <ul>
+%% <li>`Server': The Pid registered name of the server.</li>
+%% <li>`Pid': The subscriber pid to receive pubsub messages.</li>
+%% <li>`Topic': The topic to subscribe to, ie: `"users:123"'.</li>
+%% <li>`Opts': The optional list of options. See below.</li>
+%% </ul>
 %%
-%% Options:
-%%
-%% * `link`: links the subscriber to local
-%% * `fastlane`: Provides a fastlane path for the broadcasts for
-%% `ebus_broadcast:broadcast()` events. The fastlane process is
-%% notified of a cached message instead of the normal subscriber.
-%% Fastlane handlers must implement `fastlane/1` callbacks which
-%% accepts a `ebus_broadcast:broadcast()` type and returns a
-%% fastlaned format for the handler.
+%% <b>Options:</b>
+%% <br/>
+%% <ul>
+%% <li>`link': links the subscriber to the pubsub adapter.</li>
+%% <li>`fastlane': Provides a fastlane path for the broadcasts for
+%% `broadcast()' events. The fastlane process is notified of a cached
+%% message instead of the normal subscriber. Fastlane handlers must
+%% implement `fastlane/1' callbacks which accepts a `broadcast()' struct
+%% and returns a fastlaned format for the handler.</li>
+%% </ul>
 %%
 %% Examples:
 %%
+%% ```
 %% > subscribe(pubsub_server, self(), <<"foo">>, []).
 %% ok
 %% > subscribe(pubsub_server, self(), <<"foo">>,
 %%     [{fastlane, {FastPid, my_serializer, [<<"event1">>]}]).
 %% ok
+%% '''
 %% @end
--spec subscribe(atom(), pos_integer(), pid(), binary(), [term()]) -> ok.
+-spec subscribe(atom(), pos_integer(), pid(), binary(), options()) -> ok.
 subscribe(Server, PoolSize, Pid, Topic, Opts) when is_atom(Server) ->
   {ok, {Topics, Pids}} = gen_server:call(
     local_for_pid(Server, Pid, PoolSize),
@@ -99,14 +122,18 @@ subscribe(Server, PoolSize, Pid, Topic, Opts) when is_atom(Server) ->
 %% @doc
 %% Unsubscribes the pid from the topic.
 %%
-%% * `Server`: The registered server name or pid
-%% * `Pid`: The subscriber pid
-%% * `Topic`: The string topic, for example <<"users:123">>
+%% <ul>
+%% <li>`Server': The registered server name or pid.</li>
+%% <li>`Pid': The subscriber pid.</li>
+%% <li>`Topic': The string topic, for example `<<"users:123">>'.</li>
+%% </ul>
 %%
-%% Examples:
+%% Example:
 %%
+%% ```
 %% > unsubscribe(pubsub_server, self(), <<"foo">>).
 %% ok
+%% '''
 %% @end
 -spec unsubscribe(atom(), pos_integer(), pid(), binary()) -> ok.
 unsubscribe(Server, PoolSize, Pid, Topic) when is_atom(Server) ->
@@ -118,15 +145,19 @@ unsubscribe(Server, PoolSize, Pid, Topic) when is_atom(Server) ->
 %% @doc
 %% Sends a message to all subscribers of a topic.
 %%
-%% * `Server`: The registered server name or pid
-%% * `Topic`: The string topic, for example <<"users:123">>
+%% <ul>
+%% <li>`Server': The registered server name or pid.</li>
+%% <li>`Topic': The string topic, for example `<<"users:123">>'.</li>
+%% </ul>
 %%
 %% Examples:
 %%
+%% ```
 %% > broadcast(pubsub_server, self(), <<"foo">>).
 %% ok
 %% > broadcast(pubsub_server, none, <<"bar">>).
 %% ok
+%% '''
 %% @end
 -spec broadcast(atom(), pos_integer(), pid(), binary(), term()) -> ok.
 broadcast(Server, 1, From, Topic, Msg) when is_atom(Server) ->
@@ -182,13 +213,17 @@ do_broadcast(Server, Shard, From, Topic, Msg) ->
 %% @doc
 %% Returns a set of subscribers pids for the given topic.
 %%
-%% * `Server`: The registered server name or pid
-%% * `Topic`: The string topic, for example <<"users:123">>
+%% <ul>
+%% <li>`Server': The registered server name or pid.</li>
+%% <li>`Topic': The string topic, for example `<<"users:123">>'.</li>
+%% </ul>
 %%
 %% Examples:
 %%
+%% ```
 %% > subscribers(pubsub_server, <<"foo">>).
 %% [<0.48.0>, <0.49.0>]
+%% '''
 %% @end
 -spec subscribers(atom(), pos_integer(), binary()) -> [pid()].
 subscribers(Server, PoolSize, Topic) when is_atom(Server) ->
@@ -200,7 +235,7 @@ subscribers(Server, PoolSize, Topic) when is_atom(Server) ->
 
 %% @doc
 %% Returns a set of subscribers pids for the given topic and shard.
-%% @see `subscribers/3` for more information.
+%% @see subscribers/3.
 %% @end
 -spec subscribers_by_shard(atom(), binary(), non_neg_integer()) -> [pid()].
 subscribers_by_shard(Server, Topic, Shard) when is_atom(Server) ->
@@ -210,7 +245,7 @@ subscribers_by_shard(Server, Topic, Shard) when is_atom(Server) ->
 %% @doc
 %% Returns a set of subscribers pids for the given topic and shard  with
 %% fastlane tuples.
-%% @see `subscribers_by_shard/3` for more information.
+%% @see subscribers_by_shard/3.
 %% @end
 -spec subscribers_with_fastlanes(
   atom(), binary(), non_neg_integer()

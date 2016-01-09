@@ -9,13 +9,11 @@
 %%%-------------------------------------------------------------------
 -module(ebus_serializer).
 
--include("ebus.hrl").
+%% Translates a `ebus_broadcast:broadcast()' to fastlane format
+-callback fastlane(ebus_broadcast:broadcast()) -> term().
 
-%% Translates a `broadcast()' to fastlane format
--callback fastlane(broadcast()) -> term().
+%% Encodes `ebus_broadcast:message()' to transport representation
+-callback encode(ebus_broadcast:message() | ebus_broadcast:reply()) -> term().
 
-%% Encodes `message()' to transport representation
--callback encode(message() | reply()) -> term().
-
-%% Decodes data into `message()' spec
--callback decode(binary(), Opts :: [{atom(), term()}]) -> message().
+%% Decodes data into `ebus_broadcast:message()' spec
+-callback decode(binary(), [{atom(), term()}]) -> ebus_broadcast:message().

@@ -5,20 +5,25 @@
 %% API
 -export([fastlane/1, encode/1, decode/2]).
 
--include_lib("ebus/include/ebus.hrl").
-
-fastlane(#broadcast{topic = Topic, event = Event, payload = PL} = Msg) ->
+fastlane(#{topic := Topic,
+           event := Event,
+           payload := PL,
+           ebus_t := broadcast} = Msg) ->
   whereis(ebus_ps_test_subscriber) ! {fastlaned, Msg},
-  #message{topic = Topic, event = Event, payload = PL}.
+  ebus_message:new(Topic, Event, PL).
 
-encode(#reply{topic = Topic, status = Status, payload = PL, ref = Ref}) ->
-  #message{
-    topic = Topic,
-    event = <<"ebus_reply">>,
-    ref = Ref,
-    payload = #{status => Status, response => PL}
-  };
-encode(#message{} = Msg) ->
+encode(#{topic := Topic,
+         status := Status,
+         payload := PL,
+         ref := Ref,
+         ebus_t := reply}) ->
+  ebus_message:new(
+    Topic,
+    <<"ebus_reply">>,
+    #{status => Status, response => PL},
+    Ref
+  );
+encode(#{ebus_t := message} = Msg) ->
   Msg.
 
 decode(Message, _Opts) -> Message.

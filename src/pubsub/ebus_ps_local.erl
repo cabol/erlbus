@@ -38,8 +38,6 @@
   code_change/3
 ]).
 
--include("ebus.hrl").
-
 %%%===================================================================
 %%% Types
 %%%===================================================================
@@ -174,7 +172,8 @@ broadcast(Server, PoolSize, From, Topic, Msg) when is_atom(Server) ->
   ok.
 
 %% @private
-do_broadcast(Server, Shard, From, Topic, #broadcast{event = Event} = Msg) ->
+do_broadcast(Server, Shard, From, Topic,
+             #{ebus_t := broadcast, event := Event} = Msg) ->
   Reduce = fun
     ({Pid, _Fastlanes}, Cache) when Pid == From ->
       Cache;

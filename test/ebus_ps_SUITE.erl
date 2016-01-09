@@ -15,8 +15,6 @@
 %% API
 -export([broadcast/4]).
 
--include_lib("ebus/include/ebus.hrl").
-
 %%%===================================================================
 %%% Common Test
 %%%===================================================================
@@ -73,39 +71,31 @@ t_broadcast(_Config) ->
 
   ebus_ps:broadcast(
     ?MODULE, <<"topic1">>,
-    ebus_broadcast:from_map(
-      #{event => <<"fastlaned">>, topic => <<"topic1">>, payload => #{}}
-    )
+    ebus_broadcast:new(<<"topic1">>, <<"fastlaned">>, #{})
   ),
 
-  Fastlaned = ebus_message:from_map(
-    #{event => <<"fastlaned">>, topic => <<"topic1">>, payload => #{}}
-  ),
-  {fastlaned, #broadcast{}} = ebus_process:wait_for_msg(5000),
+  Fastlaned = ebus_message:new(<<"topic1">>, <<"fastlaned">>, #{}),
+  {fastlaned, #{ebus_t := broadcast}} = ebus_process:wait_for_msg(5000),
   [Fastlaned, Fastlaned] = ebus_process:messages(FastlanePid),
   [] = ebus_process:messages(self()),
-  [#broadcast{}] = ebus_process:messages(OtherSubscriber),
+  [#{ebus_t := broadcast}] = ebus_process:messages(OtherSubscriber),
 
   ebus_ps:broadcast(
     ?MODULE, <<"topic1">>,
-    ebus_broadcast:from_map(
-      #{event => <<"intercepted">>, topic => <<"topic1">>, payload => #{}}
-    )
+    ebus_broadcast:new(<<"topic1">>, <<"intercepted">>, #{})
   ),
 
-  #broadcast{event = <<"intercepted">>, topic = <<"topic1">>, payload = #{}} =
-    ebus_process:wait_for_msg(5000),
+  Broadcast = ebus_broadcast:new(<<"topic1">>, <<"intercepted">>, #{}),
+  Broadcast = ebus_process:wait_for_msg(5000),
   [Fastlaned, Fastlaned] = ebus_process:messages(FastlanePid),
   [] = ebus_process:messages(self()),
 
   ebus_ps:broadcast_from(
     ?MODULE, self(), <<"topic1">>,
-    ebus_broadcast:from_map(
-      #{event => <<"other">>, topic => <<"topic1">>, payload => #{}}
-    )
+    ebus_broadcast:new(<<"topic1">>, <<"other">>, #{})
   ),
 
-  {fastlaned, #broadcast{event = <<"other">>}} =
+  {fastlaned, #{event := <<"other">>, ebus_t := broadcast}} =
     ebus_process:wait_for_msg(5000),
 
   ct:print("\e[1;1m t_broadcast: \e[0m\e[32m[OK] \e[0m"),

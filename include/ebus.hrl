@@ -92,11 +92,17 @@
     [Tag | Values] = tuple_to_list(Tuple),
     Defaults = lists:zip(Fields, Values),
     F = fun({K, V}) ->
-          case lists:keyfind(K, 1, Proplist) of
-            {_K, V0} -> V0;
-            _        -> V
+      case lists:keyfind(K, 1, Proplist) of
+        {K, V0} ->
+          V0;
+        _ ->
+          BinK = atom_to_binary(K, utf8),
+          case lists:keyfind(BinK, 1, Proplist) of
+            {BinK, V1} -> V1;
+            _       -> V
           end
-        end,
+      end
+    end,
     L = lists:map(F, Defaults),
     list_to_tuple([Tag | L])
   end

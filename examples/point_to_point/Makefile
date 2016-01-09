@@ -19,4 +19,4 @@ distclean: clean
 	rm -rf _build *.lock
 
 run: all
-	erl -pa $(BUILD_PATH) -s pubsub -config ${CONFIG}
+	erl -pa $(BUILD_PATH) -s point_to_point -config ${CONFIG}

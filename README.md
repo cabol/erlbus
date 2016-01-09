@@ -296,6 +296,8 @@ See [examples](./examples).
 
     $ make doc
 
+> **Note:** Once you run previous command, a new folder `doc` is created, and you'll have a pretty nice HTML documentation.
+
 
 ## Change Log
 

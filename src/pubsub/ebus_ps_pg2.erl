@@ -74,4 +74,4 @@ init([Server, Opts]) ->
     ebus_supervisor_spec:worker(ebus_ps_pg2_server, [Server])
   ],
 
-  ebus_supervisor_spec:supervise(Children, [{strategy, rest_for_one}]).
+  ebus_supervisor_spec:supervise(Children, #{strategy => rest_for_one}).

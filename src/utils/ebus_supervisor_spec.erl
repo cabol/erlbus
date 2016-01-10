@@ -10,39 +10,99 @@
 -export([supervisor/2, supervisor/3]).
 -export([worker/2, worker/3]).
 
-%% Supervisor options
--type sup_option() :: {strategy, supervisor:strategy()} |
-                      {max_restarts, non_neg_integer()} |
-                      {max_seconds, non_neg_integer()}.
-
-%% Child Spec options
--type spec_option() :: {restart, supervisor:restart()} |
-                       {shutdown, supervisor:shutdown()} |
-                       {id, term()} |
-                       {function, atom()} |
-                       {modules, dynamic | [module()]}.
-
-%% The supervisor specification
--type spec() :: supervisor:child_spec().
-
--export_type([sup_option/0, spec_option/0, spec/0]).
-
 %%%===================================================================
 %%% API functions
 %%%===================================================================
 
--spec supervise([spec()], [sup_option()]) -> {ok, tuple()}.
-supervise(Children, Opts) ->
-  Strategy = case ebus_utils:keyfind(strategy, Opts, nil) of
-               nil -> throw({missing_option, strategy});
-               Val -> Val
-             end,
+%% @doc
+%% Receives a list of children (workers or supervisors) to
+%% supervise and a set of options. Returns a tuple containing
+%% the supervisor specification.
+%%
+%% Example:
+%%
+%% ```
+%% ebus_supervisor_spec:supervise(Children, #{strategy => one_for_one}).
+%% '''
+%% @end
+-spec supervise(
+  [supervisor:child_spec()], supervisor:sup_flags()
+) -> {ok, tuple()}.
+supervise(Children, SupFlags) ->
+  assert_unique_ids([Id || #{id := Id} <- Children]),
+  {ok, {SupFlags, Children}}.
 
-  MaxR = ebus_utils:keyfind(max_restarts, Opts, 3),
-  MaxS = ebus_utils:keyfind(max_seconds, Opts, 5),
+%% @equiv supervisor(Module, Args, [])
+supervisor(Module, Args) ->
+  supervisor(Module, Args, #{}).
 
-  assert_unique_ids([element(1, S) || S <- Children]),
-  {ok, {{Strategy, MaxR, MaxS}, Children}}.
+%% @doc
+%% Defines the given `Module' as a supervisor which will be started
+%% with the given arguments.
+%%
+%% Example:
+%%
+%% ```
+%% ebus_supervisor_spec:supervisor(my_sup, [], #{restart => permanent}).
+%% '''
+%%
+%% By default, the function `start_link' is invoked on the given
+%% module. Overall, the default values for the options are:
+%%
+%% ```
+%% #{
+%%   id       => Module,
+%%   start    => {Module, start_link, Args},
+%%   restart  => permanent,
+%%   shutdown => infinity,
+%%   modules  => [module]
+%% }
+%% '''
+%% @end
+-spec supervisor(
+  module(), [term()], supervisor:child_spec()
+) -> supervisor:child_spec().
+supervisor(Module, Args, Spec) when is_map(Spec) ->
+  child(supervisor, Module, Args, Spec#{shutdown => infinity});
+supervisor(_, _, _) -> throw(invalid_child_spec).
+
+%% @equiv worker(Module, Args, [])
+worker(Module, Args) ->
+  worker(Module, Args, #{}).
+
+%% @doc
+%% Defines the given `Module' as a worker which will be started
+%% with the given arguments.
+%%
+%% Example:
+%%
+%% ```
+%% ebus_supervisor_spec:worker(my_module, [], #{restart => permanent}).
+%% '''
+%%
+%% By default, the function `start_link' is invoked on the given
+%% module. Overall, the default values for the options are:
+%%
+%% ```
+%% #{
+%%   id       => Module,
+%%   start    => {Module, start_link, Args},
+%%   restart  => permanent,
+%%   shutdown => 5000,
+%%   modules  => [module]
+%% }
+%% '''
+%% @end
+-spec worker(
+  module(), [term()], supervisor:child_spec()
+) -> supervisor:child_spec().
+worker(Module, Args, Spec) when is_map(Spec) ->
+  child(worker, Module, Args, Spec);
+worker(_, _, _) -> throw(invalid_child_spec).
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
 
 %% @private
 assert_unique_ids([]) ->
@@ -53,32 +113,13 @@ assert_unique_ids([Id | Rest]) ->
     _    -> assert_unique_ids(Rest)
   end.
 
-%% @equiv supervisor(Module, Args, [])
-supervisor(Module, Args) ->
-  supervisor(Module, Args, []).
-
--spec supervisor(module(), [term()], [spec_option()]) -> spec().
-supervisor(Module, Args, Opts) ->
-  child(supervisor, Module, Args, [{shutdown, infinity} | Opts]).
-
-%% @equiv worker(Module, Args, [])
-worker(Module, Args) ->
-  worker(Module, Args, []).
-
--spec worker(module(), [term()], [spec_option()]) -> spec().
-worker(Module, Args, Opts) ->
-  child(worker, Module, Args, Opts).
-
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================
-
 %% @private
-child(Type, Module, Args, Opts) ->
-  Id       = ebus_utils:keyfind(id, Opts, Module),
-  Modules  = ebus_utils:keyfind(modules, Opts, [Module]),
-  Function = ebus_utils:keyfind(function, Opts, start_link),
-  Restart  = ebus_utils:keyfind(restart, Opts, permanent),
-  Shutdown = ebus_utils:keyfind(shutdown, Opts, 5000),
-
-  {Id, {Module, Function, Args}, Restart, Shutdown, Type, Modules}.
+child(Type, Module, Args, Spec) when is_map(Spec) ->
+  #{
+    id       => maps:get(id, Spec, Module),
+    start    => maps:get(start, Spec, {Module, start_link, Args}),
+    restart  => maps:get(restart, Spec, permanent),
+    shutdown => maps:get(shutdown, Spec, 5000),
+    type     => Type,
+    modules  => maps:get(modules, Spec, [Module])
+  }.

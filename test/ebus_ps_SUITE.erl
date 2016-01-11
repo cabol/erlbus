@@ -80,13 +80,10 @@ t_broadcast(_Config) ->
   [] = ebus_process:messages(self()),
   [#{ebus_t := broadcast}] = ebus_process:messages(OtherSubscriber),
 
-  ebus_ps:broadcast(
-    ?MODULE, <<"topic1">>,
-    ebus_broadcast:new(<<"topic1">>, <<"intercepted">>, #{})
-  ),
+  Intercepted = ebus_broadcast:new(<<"topic1">>, <<"intercepted">>, #{}),
+  ebus_ps:broadcast(?MODULE, <<"topic1">>, Intercepted),
 
-  Broadcast = ebus_broadcast:new(<<"topic1">>, <<"intercepted">>, #{}),
-  Broadcast = ebus_process:wait_for_msg(5000),
+  Intercepted = ebus_process:wait_for_msg(5000),
   [Fastlaned, Fastlaned] = ebus_process:messages(FastlanePid),
   [] = ebus_process:messages(self()),
 

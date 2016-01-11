@@ -29,14 +29,34 @@
 %%% Types
 %%%===================================================================
 
-% Dispatch options
--type topic()         :: iodata().
--type handler()       :: pid().
--type dispatch_fun()  :: fun(([term()]) -> term()).
--type dispatch_opt()  :: {scope, local | global} |
-                         {dispatch_fun, dispatch_fun()}.
+%% @type topic() = iodata().
+-type topic() :: iodata().
+
+%% @type handler() = pid().
+-type handler() :: pid().
+
+%% @type dispatch_fun() = fun(([term()]) -> term()).
+%%
+%% Receives as argument the subscribers list. Then it should choose
+%% one subscriber from the given list and return it.
+-type dispatch_fun() :: fun(([term()]) -> term()).
+
+%% @type dispatch_opt() =
+%% {scope, local | global} | {dispatch_fun, dispatch_fun()}.
+%%
+%% Available dispatch options.
+-type dispatch_opt() :: {scope, local | global} |
+                        {dispatch_fun, dispatch_fun()}.
+
+%% @type dispatch_opts() = [dispatch_opt()].
+%%
+% Dispatch options.
 -type dispatch_opts() :: [dispatch_opt()].
--type options()       :: ebus_ps_local:options().
+
+%% @type options() = ebus_ps_local:options().
+%%
+%% `sub/4' options.
+-type options() :: ebus_ps_local:options().
 
 % Exported types
 -export_type([

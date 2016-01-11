@@ -73,10 +73,10 @@ init([Server, PoolSize, DispatchRules]) ->
 
     ebus_supervisor_spec:supervisor(
       ebus_supervisor,
-      [ShardChildren, [{strategy, one_for_all}]],
-      [{id, Shard}]
+      [ShardChildren, #{strategy => one_for_all}],
+      #{id => Shard}
     )
   end,
   Children = [ChildrenFun(C) || C <- lists:seq(0, PoolSize - 1)],
 
-  ebus_supervisor_spec:supervise(Children, [{strategy, one_for_one}]).
+  ebus_supervisor_spec:supervise(Children, #{strategy => one_for_one}).

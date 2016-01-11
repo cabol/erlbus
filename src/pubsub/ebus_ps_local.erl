@@ -42,13 +42,24 @@
 %%% Types
 %%%===================================================================
 
-%% PubSub options
+%% @type fastlane() =
+%% {FastlanePid :: pid(),
+%%  Serializer :: module(),
+%%  EventIntercepts :: [term()]}.
+%%
+%% Fastlane definition.
 -type fastlane() :: {
   FastlanePid     :: pid(),
   Serializer      :: module(),
   EventIntercepts :: [term()]
 }.
+
+%% @type option() = {link, any()} | {fastlane, fastlane()}.
+%%
+%% `subscribe/5' function options.
 -type option()  :: {link, _} | {fastlane, fastlane()}.
+
+%% @type options() = [option()].
 -type options() :: [option()].
 
 -export_type([fastlane/0, option/0, options/0]).
@@ -111,7 +122,6 @@ subscribe(Server, PoolSize, Pid, Topic, Opts) when is_atom(Server) ->
     local_for_pid(Server, Pid, PoolSize),
     {subscribe, Pid, Topic, Opts}
   ),
-
   Fastlane = ebus_utils:keyfind(fastlane, Opts, nil),
   true = ets:insert(Topics, {Topic, {Pid, Fastlane}}),
   true = ets:insert(Pids, {Pid, Topic}),

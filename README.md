@@ -25,7 +25,7 @@ You can read more about the PubSub implementation [HERE](https://hexdocs.pm/phoe
 
 ## Building ErlBus
 
-Assuming you have a working Erlang installation (recommended 17 or later), building **ErlBus** should be as simple as:
+Assuming you have a working Erlang installation (18 or later), building **ErlBus** should be as simple as:
 
     $ git clone https://github.com/cabol/erlbus.git
     $ cd erlbus

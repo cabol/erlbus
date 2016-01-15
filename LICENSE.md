@@ -1,6 +1,7 @@
 # MIT License
 
 Original work Copyright (c) 2014 Chris McCord
+
 Modified work Copyright (c) 2016 Carlos Andres Bolaños
 
 Permission is hereby granted, free of charge, to any person obtaining

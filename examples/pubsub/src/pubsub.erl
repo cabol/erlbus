@@ -15,15 +15,15 @@
 start() ->
   application:ensure_all_started(pubsub).
 
+stop() ->
+  application:stop(pubsub).
+
 start(_Type, _Args) ->
   P = spawn_link(fun() -> publisher(?TOPIC) end),
   lists:foreach(fun(N) -> subscriber(?TOPIC, N) end, lists:seq(1, 3)),
   timer:sleep(1 * 60 * 1000),
   exit(P, kill),
   teardown_ebus().
-
-stop() ->
-  application:stop(pubsub).
 
 stop(_State) ->
   ok.
@@ -47,5 +47,4 @@ subscriber(Topic, N) ->
   {Handler, _} = ebus_process:spawn_handler(Callback, N, [monitor]),
   ebus:sub(Handler, Topic).
 
-teardown_ebus() ->
-  application:stop(ebus).
+teardown_ebus() -> ebus:stop().

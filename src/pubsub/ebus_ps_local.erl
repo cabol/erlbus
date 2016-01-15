@@ -267,8 +267,10 @@ subscribers_with_fastlanes(Server, Topic, Shard) when is_atom(Server) ->
   end.
 
 %% @doc
-%% Returns the topic list.
-%% This is an expensive and private operation. DO NOT USE IT IN PROD.
+%% Returns the topic list for all local shards.
+%%
+%% <p><font color="red">This is an expensive and private operation.
+%% <b> DO NOT USE IT IN PROD</b></font></p>
 %% @end
 -spec list(atom(), pos_integer()) -> [binary()].
 list(Server, PoolSize) ->
@@ -279,7 +281,10 @@ list(Server, PoolSize) ->
   ).
 
 %% @doc
-%% This is an expensive and private operation. DO NOT USE IT IN PROD.
+%% Returns the topic list for the given shard.
+%%
+%% <p><font color="red">This is an expensive and private operation.
+%% <b> DO NOT USE IT IN PROD</b></font></p>
 %% @end
 -spec list_by_shard(atom(), non_neg_integer()) -> [binary()].
 list_by_shard(Server, Shard) when is_atom(Server) ->
@@ -291,9 +296,12 @@ list_by_shard(Server, Shard) when is_atom(Server) ->
   ).
 
 %% @doc
-%% This is an expensive and private operation. DO NOT USE IT IN PROD.
+%% Returns a list of topics which `Pid' is subscribed.
+%%
+%% <p><font color="red">This is an expensive and private operation.
+%% <b> DO NOT USE IT IN PROD</b></font></p>
 %% @end
--spec subscription(atom(), non_neg_integer(), pid()) -> binary().
+-spec subscription(atom(), non_neg_integer(), pid()) -> [binary()].
 subscription(Server, PoolSize, Pid) when is_atom(Server) ->
   {_Local, GCServer} = pools_for_shard(
     pid_to_shard(Pid, PoolSize), Server

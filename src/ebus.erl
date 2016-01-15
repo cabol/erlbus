@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% @doc
-%%% Main entry point for `ebus' functions.
-%%% This is also a wrapper for `ebus_ps' module.
+%%% Main `ebus` interface. This module also works as a wrapper on top
+%%% of `ebus_ps' module.
 %%% @see ebus_ps
 %%% @end
 %%%-------------------------------------------------------------------
@@ -176,6 +176,15 @@ pub_from(From, Topic, Message) ->
 
 %% @doc
 %% Same as `pub/3' but message is not sent to `FromHandler'.
+%%
+%% Examples:
+%%
+%% ```
+%% > ebus:pub_from(self(), "foo", <<"message">>).
+%% ok
+%% > ebus:pub_from(ebus_ps, self(), "foo", <<"message">>).
+%% ok
+%% '''
 %% @end
 -spec pub_from(atom(), handler(), topic(), term()) -> ok | {error, term()}.
 pub_from(Server, FromHandler, Topic, Message) ->
@@ -215,6 +224,13 @@ local_subscribers(Topic) ->
 %% @doc
 %% Same as `subscribers/2' but only local subscribers handlers for the
 %% given `Topic' are returned.
+%%
+%% Example:
+%%
+%% ```
+%% > ebus:local_subscribers(ebus_ps, <<"foo">>).
+%% [<0.48.0>, <0.49.0>]
+%% '''
 %% @end
 -spec local_subscribers(atom(), topic()) -> [pid()].
 local_subscribers(Server, Topic) ->
@@ -226,10 +242,13 @@ topics() ->
 
 %% @doc
 %% Returns the list of all topics (local and global) in use.
-%% This is an expensive and private operation. DO NOT USE IT IN PROD.
-%% <br/>
+%% This is an expensive and private operation.
+%%
+%% <p><font color="red">This is an expensive operation.
+%% <b> DO NOT USE IT IN PROD</b></font></p>
+%%
 %% Example:
-%% <br/>
+%%
 %% ```
 %% > ebus:topics().
 %% [<<"foo">>, <<"bar">>]
@@ -248,6 +267,15 @@ local_topics() ->
 
 %% @doc
 %% Same as `topics/1' but only local topics are returned.
+%%
+%% Example:
+%%
+%% ```
+%% > ebus:local_topics().
+%% [<<"foo">>, <<"bar">>]
+%% > ebus:local_topics(ebus_ps).
+%% [<<"foo">>, <<"bar">>]
+%% '''
 %% @end
 -spec local_topics(atom()) -> [binary()].
 local_topics(Server) ->

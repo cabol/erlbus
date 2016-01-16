@@ -48,12 +48,12 @@ t_handler(_Config) ->
 
   % callback 1
   CB1 = fun(Msg) ->
-    ets:insert(?TAB, {ebus_utils:build_name([Msg]), Msg})
+    ets:insert(?TAB, {ebus_common:build_name([Msg]), Msg})
   end,
 
   % callback 2
   CB2 = fun(Ctx, Msg) ->
-    ets:insert(?TAB, {ebus_utils:build_name([Ctx, Msg]), Msg})
+    ets:insert(?TAB, {ebus_common:build_name([Ctx, Msg]), Msg})
   end,
 
   % create some handlers
@@ -111,4 +111,4 @@ t_handler(_Config) ->
 %%% Internal functions
 %%%===================================================================
 
-key(L) -> ebus_utils:build_name(L).
+key(L) -> ebus_common:build_name(L).

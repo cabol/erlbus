@@ -55,7 +55,7 @@
 
 -spec start_link(atom(), [term()]) -> supervisor:startlink_ret().
 start_link(Name, Opts) ->
-  SupName = ebus_utils:build_name([Name, <<"sup">>], <<"_">>),
+  SupName = ebus_common:build_name([Name, <<"sup">>], <<"_">>),
   supervisor:start_link({local, SupName}, ?MODULE, [Name, Opts]).
 
 %%%===================================================================
@@ -64,7 +64,7 @@ start_link(Name, Opts) ->
 
 %% @hidden
 init([Server, Opts]) ->
-  PoolSize = ebus_utils:keyfind(pool_size, Opts, 1),
+  PoolSize = ebus_common:keyfind(pool_size, Opts, 1),
   DispatchRules = [{broadcast, ebus_ps_pg2_server, [Server, PoolSize]}],
 
   Children = [

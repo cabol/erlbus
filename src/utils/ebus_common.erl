@@ -3,7 +3,7 @@
 %%% Common utilities.
 %%% @end
 %%%-------------------------------------------------------------------
--module(ebus_utils).
+-module(ebus_common).
 
 %% API
 -export([keyfind/2, keyfind/3, rand_elem/1]).
@@ -15,19 +15,20 @@
 %%% API
 %%%===================================================================
 
-%% @doc Calls keyfind/3 with Default = undefined.
--spec keyfind(any(), term()) -> term().
+%% @equiv keyfind(Key, TupleList, nil)
 keyfind(Key, TupleList) ->
-  keyfind(Key, TupleList, undefined).
+  keyfind(Key, TupleList, nil).
 
-%% @doc Searches the list of tuples TupleList for a tuple whose Nth element
-%%      compares equal to Key. Returns Tuple's value if such a tuple is
-%%      found, otherwise Default.
--spec keyfind(any(), term(), any()) -> term().
+%% @doc
+%% Searches into the list of tuples `TupleList' for a tuple whose Nth element
+%% compares equal to `Key'. Returns Tuple's value if such a tuple is
+%% found, otherwise `Default'.
+%% @end
+-spec keyfind(term(), [tuple()], term()) -> term().
 keyfind(Key, TupleList, Default) ->
   case lists:keyfind(Key, 1, TupleList) of
-    {_K, V} -> V;
-    _       -> Default
+    {Key, V} -> V;
+    _        -> Default
   end.
 
 %% @doc Returns a random element from given list `L'.
@@ -40,8 +41,10 @@ rand_elem(L) when is_list(L), length(L) > 0 ->
 build_name(L) ->
   build_name(L, <<"_">>).
 
-%% @doc Build a name given the list of terms, then they are transformed
-%%      to binary and concatenated by `Separator'.
+%% @doc
+%% Build a name given the list of terms, then they are transformed
+%% to binary and concatenated by `Separator'.
+%% @end
 -spec build_name([any()], iodata()) -> atom().
 build_name(L, Separator) when is_list(L) ->
   Fun = fun
@@ -115,8 +118,10 @@ to_list(Data) when is_pid(Data); is_reference(Data); is_tuple(Data) ->
 to_list(Data) ->
   Data.
 
-%% @doc applies F to each element of L in a separate process. The results
-%%      returned may not be in the same order as they appear in L.
+%% @doc
+%% Applies fun `F' to each element of `L' in a separate process. The results
+%% returned may not be in the same order as they appear in `L'.
+%% @end
 pmap(F, L) ->
   S = self(),
   Ref = erlang:make_ref(),

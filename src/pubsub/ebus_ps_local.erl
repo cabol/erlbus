@@ -122,7 +122,7 @@ subscribe(Server, PoolSize, Pid, Topic, Opts) when is_atom(Server) ->
     local_for_pid(Server, Pid, PoolSize),
     {subscribe, Pid, Topic, Opts}
   ),
-  Fastlane = ebus_utils:keyfind(fastlane, Opts, nil),
+  Fastlane = ebus_common:keyfind(fastlane, Opts),
   true = ets:insert(Topics, {Topic, {Pid, Fastlane}}),
   true = ets:insert(Pids, {Pid, Topic}),
   ok.
@@ -173,7 +173,7 @@ broadcast(Server, 1, From, Topic, Msg) when is_atom(Server) ->
   ok;
 broadcast(Server, PoolSize, From, Topic, Msg) when is_atom(Server) ->
   Parent = self(),
-  ebus_utils:pmap(
+  ebus_common:pmap(
     fun(Shard) ->
       do_broadcast(Server, Shard, From, Topic, Msg),
       unlink(Parent)
@@ -310,11 +310,11 @@ subscription(Server, PoolSize, Pid) when is_atom(Server) ->
 
 -spec local_name(atom(), non_neg_integer()) -> atom().
 local_name(Server, Shard) ->
-  ebus_utils:build_name([Server, <<"local">>, Shard], <<"_">>).
+  ebus_common:build_name([Server, <<"local">>, Shard], <<"_">>).
 
 -spec gc_name(atom(), non_neg_integer()) -> atom().
 gc_name(Server, Shard) ->
-  ebus_utils:build_name([Server, <<"gc">>, Shard], <<"_">>).
+  ebus_common:build_name([Server, <<"gc">>, Shard], <<"_">>).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -337,7 +337,7 @@ init([Local, GC]) ->
 %% @hidden
 handle_call({subscribe, Pid, _Topic, Opts}, _From,
             #{topics := Topics, pids := Pids} = State) ->
-  case ebus_utils:keyfind(link, Opts, nil) of
+  case ebus_common:keyfind(link, Opts) of
     nil -> ok;
     _   -> link(Pid)
   end,

@@ -116,7 +116,7 @@ sub(Server, Handler, Topic) ->
 %% @end
 -spec sub(atom(), handler(), topic(), options()) -> ok | {error, term()}.
 sub(Server, Handler, Topic, Opts) ->
-  ebus_ps:subscribe(Server, Handler, ebus_utils:to_bin(Topic), Opts).
+  ebus_ps:subscribe(Server, Handler, ebus_common:to_bin(Topic), Opts).
 
 %% @equiv unsub(server(), Handler, Topic)
 unsub(Handler, Topic) ->
@@ -142,7 +142,7 @@ unsub(Handler, Topic) ->
 %% @end
 -spec unsub(atom(), handler(), topic()) -> ok | {error, term()}.
 unsub(Server, Handler, Topic) ->
-  ebus_ps:unsubscribe(Server, Handler, ebus_utils:to_bin(Topic)).
+  ebus_ps:unsubscribe(Server, Handler, ebus_common:to_bin(Topic)).
 
 %% @equiv pub(server(), Topic, Message)
 pub(Topic, Message) ->
@@ -168,7 +168,7 @@ pub(Topic, Message) ->
 %% @end
 -spec pub(atom(), topic(), term()) -> ok | {error, term()}.
 pub(Server, Topic, Message) ->
-  ebus_ps:broadcast(Server, ebus_utils:to_bin(Topic), Message).
+  ebus_ps:broadcast(Server, ebus_common:to_bin(Topic), Message).
 
 %% @equiv pub_from(server(), From, Topic, Message)
 pub_from(From, Topic, Message) ->
@@ -188,7 +188,7 @@ pub_from(From, Topic, Message) ->
 %% @end
 -spec pub_from(atom(), handler(), topic(), term()) -> ok | {error, term()}.
 pub_from(Server, FromHandler, Topic, Message) ->
-  BinTopic = ebus_utils:to_bin(Topic),
+  BinTopic = ebus_common:to_bin(Topic),
   ebus_ps:broadcast_from(Server, FromHandler, BinTopic, Message).
 
 %% @equiv subscribers(server(), Topic)
@@ -213,7 +213,7 @@ subscribers(Topic) ->
 %% @end
 -spec subscribers(atom(), topic()) -> [pid()].
 subscribers(Server, Topic) ->
-  BinTopic = ebus_utils:to_bin(Topic),
+  BinTopic = ebus_common:to_bin(Topic),
   {ResL, _} = rpc:multicall(?MODULE, local_subscribers, [Server, BinTopic]),
   lists:merge(ResL).
 
@@ -234,7 +234,7 @@ local_subscribers(Topic) ->
 %% @end
 -spec local_subscribers(atom(), topic()) -> [pid()].
 local_subscribers(Server, Topic) ->
-  ebus_ps:subscribers(Server, ebus_utils:to_bin(Topic)).
+  ebus_ps:subscribers(Server, ebus_common:to_bin(Topic)).
 
 %% @equiv topics(server())
 topics() ->
@@ -322,13 +322,13 @@ dispatch(Topic, Message, Opts) ->
 %% @end
 -spec dispatch(atom(), topic(), term(), dispatch_opts()) -> ok.
 dispatch(Server, Topic, Message, Opts) ->
-  BinTopic = ebus_utils:to_bin(Topic),
-  Subscribers = case ebus_utils:keyfind(scope, Opts, local) of
+  BinTopic = ebus_common:to_bin(Topic),
+  Subscribers = case ebus_common:keyfind(scope, Opts, local) of
     local -> local_subscribers(Server, BinTopic);
     _     -> subscribers(Server, BinTopic)
   end,
-  DispatchFun = case ebus_utils:keyfind(dispatch_fun, Opts, nil) of
-    nil -> fun ebus_utils:rand_elem/1;
+  DispatchFun = case ebus_common:keyfind(dispatch_fun, Opts) of
+    nil -> fun ebus_common:rand_elem/1;
     Fun -> Fun
   end,
   case Subscribers of
@@ -362,7 +362,7 @@ stop(_State) -> ok.
 -spec server() -> atom().
 server() ->
   PubSub = application:get_env(ebus, pubsub, []),
-  ebus_utils:keyfind(name, PubSub, default_ps_server()).
+  ebus_common:keyfind(name, PubSub, default_ps_server()).
 
 %% @doc Returns default `ebus' server name: `ebus_ps'.
 -spec default_ps_server() -> ebus_ps.

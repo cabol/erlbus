@@ -30,7 +30,7 @@ init_per_testcase(_, Config) ->
   [{pid, Pid} | Config].
 
 end_per_testcase(_, Config) ->
-  exit(ebus_utils:keyfind(pid, Config), normal),
+  exit(ebus_common:keyfind(pid, Config), normal),
   timer:sleep(1000),
   Config.
 

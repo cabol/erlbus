@@ -38,13 +38,13 @@ dispatcher(Topic) ->
   dispatcher(Topic).
 
 subscriber(Topic, N) ->
-  Callback = fun(Ctx, Msg) ->
+  Callback = fun(Msg, Args) ->
     io:format(
-      "\e[36m---> [PID: ~p][CTX: ~p][MSG: ~p]~n\e[0m",
-      [self(), Ctx, Msg]
+      "\e[36m---> [PID: ~p][MSG: ~p][Args: ~p]~n\e[0m",
+      [self(), Msg, Args]
     )
   end,
-  {Handler, _} = ebus_process:spawn_handler(Callback, N, [monitor]),
+  {Handler, _} = ebus_process:spawn_handler(Callback, [N], [monitor]),
   ebus:sub(Handler, Topic).
 
 teardown_ebus() -> ebus:stop().

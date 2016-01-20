@@ -18,7 +18,7 @@ init(_, _Req, _Opts) ->
 
 websocket_init(_Type, Req, _Opts) ->
   % Create the handler from our custom callback
-  Handler = ebus_process:spawn_handler(fun chat_erlbus_handler:handle_msg/2, self()),
+  Handler = ebus_process:spawn_handler(fun chat_erlbus_handler:handle_msg/2, [self()]),
   ebus:sub(Handler, ?CHATROOM_NAME),
   {ok, Req, #state{name = get_name(Req), handler = Handler}, ?TIMEOUT}.
 

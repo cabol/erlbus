@@ -1,6 +1,12 @@
 REBAR = $(shell which rebar3 || echo ./rebar3)
 
-BUILD_PATH = ./_build/default/lib/*/ebin
+ifdef REBAR_PROFILE
+PROFILE = $(REBAR_PROFILE)
+else
+PROFILE = default
+endif
+
+BUILD_PATH = ./_build/$(PROFILE)/lib/*/ebin
 
 CONFIG ?= test/test.config
 

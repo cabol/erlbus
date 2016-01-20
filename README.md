@@ -299,6 +299,26 @@ See [examples](./examples).
 > **Note:** Once you run previous command, a new folder `doc` is created, and you'll have a pretty nice HTML documentation.
 
 
+## ErlBus Profiles
+
+So far, the only additional profile provided is `debug`, because `default` profile is enough
+to do all build and test tasks.
+
+### Debug Profile
+
+**ErlBus** gives you the chance to compile and run `ebus` in debug profile. In this mode,
+additional monitoring, debug and testing dependencies will be fetched:
+
+ * [recon](https://github.com/ferd/recon): Collection of functions and scripts to debug Erlang in production.
+ * [eper](https://github.com/massemanet/eper): Collection of performance related tools (`redbug`, `dtop`, `ntop`, `atop`).
+
+To run `ebus` with debug profile enabled:
+
+    $ make REBAR_PROFILE=debug shell
+
+Now you can use `recon` and `eper` like you want in order to monitor and debug `ebus`.
+
+
 ## Change Log
 
 All notable changes to this project will be documented in the [CHANGELOG.md](CHANGELOG.md).

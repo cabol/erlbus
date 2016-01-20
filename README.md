@@ -144,18 +144,18 @@ CB1 = fun(Msg) ->
 end
 #Fun<erl_eval.6.54118792>
 
-% other callback but receiving an initial context,
-% that may be used when message arrives
-CB2 = fun(Ctx, Msg) ->
-  io:format("CB2: Ctx: ~p, Msg: ~p~n", [Ctx, Msg])
+% other callback but receiving additional arguments,
+% which may be used when message arrives
+CB2 = fun(Msg, Args) ->
+  io:format("CB2: Msg: ~p, Args: ~p~n", [Msg, Args])
 end.
 #Fun<erl_eval.12.54118792>
 
 % use ebus_process utility to spawn a handler
 H1 = ebus_process:spawn_handler(CB1).
-<0.69.0>
-H2 = ebus_process:spawn_handler(CB2, "any_ctx").
-<0.80.0>
+<0.70.0>
+H2 = ebus_process:spawn_handler(CB2, ["any_ctx"]).
+<0.72.0>
 
 % subscribe handlers
 ebus:sub(H1, "foo").
@@ -172,16 +172,16 @@ any node:
 ```erlang
 % publish message
 ebus:pub("foo", {foo, "again"}).
-CB2: Ctx: "any_ctx", Msg: {foo,"again"}
 CB1: {foo,"again"}
+CB2: Msg: {foo,"again"}, Args: "any_ctx"
 ok
 ```
 
 And in the other node you will see those messages have arrived too:
 
 ```erlang
-CB1: {foo,"again"}  
-CB2: Ctx: "any_ctx", Msg: {foo,"again"}
+CB1: {foo,"again"}
+CB2: Msg: {foo,"again"}, Args: "any_ctx"
 ```
 
 Let's check subscribers, so from any Erlang console:
@@ -189,7 +189,7 @@ Let's check subscribers, so from any Erlang console:
 ```erlang
 % returns local and remote subscribers
 ebus:subscribers("foo").
-[<7014.66.0>,<0.69.0>]
+[<7023.67.0>,<7023.69.0>,<0.70.0>,<0.72.0>]
 ```
 
 You can also check the [TESTS](./test/) for more info about to use `ebus`.
@@ -312,4 +312,4 @@ Modified work Copyright (c) 2016 Carlos Andres Bolaños
 
 **ErlBus** source code is licensed under the [MIT License](LICENSE.md).
 
-> **NOTE:**: Pub/Sub implementation was taken entirely from [Phoenix Framework](https://github.com/phoenixframework/phoenix).
+> **NOTE:**: Pub/Sub implementation was taken from [Phoenix Framework](https://github.com/phoenixframework/phoenix).

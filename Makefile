@@ -1,11 +1,15 @@
-REBAR = ./rebar3
+REBAR = $(shell which rebar3 || echo ./rebar3)
 
 BUILD_PATH = ./_build/default/lib/*/ebin
 
 CONFIG ?= test/test.config
 
 CT_OPTS = -cover test/cover.spec -erl_args -config ${CONFIG}
-CT_SUITES = ebus_ps_local_SUITE ebus_ps_SUITE ebus_handler_SUITE ebus_dist_SUITE
+CT_SUITES = ebus_task_SUITE \
+            ebus_ps_local_SUITE \
+            ebus_ps_SUITE \
+            ebus_handler_SUITE \
+            ebus_dist_SUITE
 
 .PHONY: all compile clean distclean dialyze tests shell doc
 

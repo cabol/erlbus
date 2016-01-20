@@ -173,13 +173,15 @@ broadcast(Server, 1, From, Topic, Msg) when is_atom(Server) ->
   ok;
 broadcast(Server, PoolSize, From, Topic, Msg) when is_atom(Server) ->
   Parent = self(),
-  ebus_common:pmap(
-    fun(Shard) ->
-      do_broadcast(Server, Shard, From, Topic, Msg),
-      unlink(Parent)
-    end, lists:seq(0, PoolSize - 1)
-  ),
-  ok.
+  Fun = fun(Shard) ->
+    ebus_task:await(
+      ebus_task:async(fun() ->
+        do_broadcast(Server, Shard, From, Topic, Msg),
+        unlink(Parent)
+      end)
+    )
+  end,
+  lists:foreach(Fun, lists:seq(0, PoolSize - 1)).
 
 %% @private
 do_broadcast(Server, Shard, From, Topic,

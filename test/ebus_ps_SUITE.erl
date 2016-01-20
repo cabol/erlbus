@@ -75,7 +75,7 @@ t_broadcast(_Config) ->
   ),
 
   Fastlaned = ebus_message:new(<<"topic1">>, <<"fastlaned">>, #{}),
-  {fastlaned, #{ebus_t := broadcast}} = ebus_process:wait_for_msg(5000),
+  {fastlaned, #{ebus_t := broadcast}} = ebus_process:wait_for_msg(),
   [Fastlaned, Fastlaned] = ebus_process:messages(FastlanePid),
   [] = ebus_process:messages(self()),
   [#{ebus_t := broadcast}] = ebus_process:messages(OtherSubscriber),
@@ -94,6 +94,8 @@ t_broadcast(_Config) ->
 
   {fastlaned, #{event := <<"other">>, ebus_t := broadcast}} =
     ebus_process:wait_for_msg(5000),
+
+  {error, timeout} = ebus_process:wait_for_msg(1),
 
   ct:print("\e[1;1m t_broadcast: \e[0m\e[32m[OK] \e[0m"),
   ok.

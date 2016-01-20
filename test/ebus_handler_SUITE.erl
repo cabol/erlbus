@@ -12,7 +12,10 @@
 ]).
 
 %% Tests
--export([t_handler/1]).
+-export([t_handler/1, t_callback_handler/1]).
+
+%% Others
+-export([my_callback/2]).
 
 -define(TAB, ebus_test).
 
@@ -20,7 +23,7 @@
 %%% Common Test
 %%%===================================================================
 
-all() -> [t_handler].
+all() -> [t_handler, t_callback_handler].
 
 init_per_suite(Config) ->
   ebus:start(),
@@ -38,6 +41,9 @@ end_per_testcase(_, Config) ->
   ets:delete(?TAB),
   Config.
 
+my_callback(Msg, Args) ->
+  ets:insert(?TAB, {ebus_common:build_name([Msg, Args]), Msg}).
+
 %%%===================================================================
 %%% Exported Tests Functions
 %%%===================================================================
@@ -52,13 +58,13 @@ t_handler(_Config) ->
   end,
 
   % callback 2
-  CB2 = fun(Ctx, Msg) ->
-    ets:insert(?TAB, {ebus_common:build_name([Ctx, Msg]), Msg})
+  CB2 = fun(Msg, Arg1, Arg2) ->
+    ets:insert(?TAB, {ebus_common:build_name([Msg, Arg1, Arg2]), Msg})
   end,
 
   % create some handlers
-  {H1, Ref1} = ebus_process:spawn_handler(CB1, nil, [monitor]),
-  H2 = ebus_process:spawn_handler(CB2, h2),
+  {H1, Ref1} = ebus_process:spawn_handler(CB1, [], [monitor]),
+  H2 = ebus_process:spawn_handler(CB2, [<<"H2">>, h2]),
 
   % subscribe local process
   ok = ebus:sub(H1, <<"foo">>),
@@ -72,7 +78,7 @@ t_handler(_Config) ->
   % check received messages
   [{_, M11}] = ets:lookup(?TAB, key([<<"M1">>])),
   <<"M1">> = M11,
-  [{_, M12}] = ets:lookup(?TAB, key([h2, <<"M1">>])),
+  [{_, M12}] = ets:lookup(?TAB, key([<<"M1">>, <<"H2">>, h2])),
   <<"M1">> = M12,
 
   % publish message
@@ -81,7 +87,7 @@ t_handler(_Config) ->
 
   % check received messages
   [] = ets:lookup(?TAB, key([<<"M2">>])),
-  [{_, M22}] = ets:lookup(?TAB, key([h2, <<"M2">>])),
+  [{_, M22}] = ets:lookup(?TAB, key([<<"M2">>, <<"H2">>, h2])),
   <<"M2">> = M22,
 
   ebus:unsub(H2, <<"bar">>),
@@ -92,7 +98,7 @@ t_handler(_Config) ->
 
   % check received messages
   [] = ets:lookup(?TAB, key([<<"M3">>])),
-  [] = ets:lookup(?TAB, key([h2, <<"M3">>])),
+  [] = ets:lookup(?TAB, key([<<"M3">>, <<"H2">>, h2])),
 
   % check subscribers
   2 = length(ebus:subscribers(<<"foo">>)),
@@ -105,6 +111,38 @@ t_handler(_Config) ->
   1 = length(ebus:subscribers(<<"foo">>)),
 
   ct:print("\e[1;1m t_handler: \e[0m\e[32m[OK] \e[0m"),
+  ok.
+
+t_callback_handler(_Config) ->
+  % callbacks
+  CB1 = fun(Msg) ->
+    ets:insert(?TAB, {ebus_common:build_name([Msg]), Msg})
+  end,
+  CB2 = fun(Msg, Args) ->
+    ets:insert(?TAB, {ebus_common:build_name([Msg, Args]), Msg})
+  end,
+
+  % create some handlers
+  H1 = ebus_process:spawn_callback_handler(?MODULE, my_callback, [<<"H1">>]),
+  H2 = ebus_process:spawn_handler(CB2, [<<"H2">>]),
+  H3 = ebus_process:spawn_handler(CB1),
+
+  % subscribe local process
+  [ok, ok, ok] = [ebus:sub(H, <<"foo">>) || H <- [H1, H2, H3]],
+
+  % publish message
+  ebus:pub(<<"foo">>, <<"M1">>),
+  timer:sleep(500),
+
+  % check received messages
+  [{_, M11}] = ets:lookup(?TAB, key([<<"M1">>, <<"H1">>])),
+  <<"M1">> = M11,
+  [{_, M12}] = ets:lookup(?TAB, key([<<"M1">>, <<"H2">>])),
+  <<"M1">> = M12,
+  [{_, M13}] = ets:lookup(?TAB, key([<<"M1">>])),
+  <<"M1">> = M13,
+
+  ct:print("\e[1;1m t_callback_handler: \e[0m\e[32m[OK] \e[0m"),
   ok.
 
 %%%===================================================================

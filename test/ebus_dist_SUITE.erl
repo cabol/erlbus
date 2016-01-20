@@ -184,7 +184,6 @@ t_dispatch(Config) ->
   MsgsS11 = MsgsS1 + 100,
   MsgsS11 = length(ebus_process:r_messages(S1)),
 
-
   ct:print("\e[1;1m t_dispatch: \e[0m\e[32m[OK] \e[0m"),
   ok.
 

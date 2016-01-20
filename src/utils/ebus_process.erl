@@ -10,19 +10,7 @@
 -export([messages/0, messages/1, r_messages/1]).
 -export([spawn_timer_fun/1]).
 -export([spawn_handler/1, spawn_handler/2, spawn_handler/3]).
-
-%%%===================================================================
-%%% Types & Macros
-%%%===================================================================
-
-%% @type callback() =
-%% fun((Msg :: term()) -> any()) |
-%% fun((Ctx :: term(), Msg :: term()) -> any()).
--type callback() :: fun((Msg :: term()) -> any()) |
-                    fun((Ctx :: term(), Msg :: term()) -> any()).
-
-%% Exported types
--export_type([callback/0]).
+-export([spawn_callback_handler/3, spawn_callback_handler/4]).
 
 %%%===================================================================
 %%% API
@@ -72,39 +60,59 @@ r_messages(Pid) ->
 spawn_timer_fun(Timeout) ->
   spawn_link(fun() -> timer:sleep(Timeout) end).
 
-%% @equiv spawn_handler(Fun, nil)
+%% @equiv spawn_handler(Fun, [])
 spawn_handler(Fun) ->
-  spawn_handler(Fun, nil).
+  spawn_handler(Fun, []).
 
-%% @equiv spawn_handler(Fun, Ctx, [])
-spawn_handler(Fun, Ctx) ->
-  spawn_handler(Fun, Ctx, []).
+%% @equiv spawn_handler(Fun, Args, [])
+spawn_handler(Fun, Args) ->
+  spawn_handler(Fun, Args, []).
+
+%% @equiv spawn_callback_handler(erlang, apply, [Fun, Args], Opts)
+%% @doc
+%% Same as `spawn_callback_handler/4', but receives a `fun' as
+%% callback. This `fun' is invoked as:
+%%
+%% ```
+%% apply(erlang, apply, [Fun, [Message | Args]])
+%% '''
+%%
+%% Where `Message' is inserted as 1st argument in the `fun' args.
+%% @end
+spawn_handler(Fun, Args, Opts) ->
+  spawn_callback_handler(erlang, apply, [Fun, Args], Opts).
+
+%% @equiv spawn_callback_handler(Module, Fun, Args, [])
+spawn_callback_handler(Module, Fun, Args) ->
+  spawn_callback_handler(Module, Fun, Args, []).
 
 %% @doc
 %% Spawns a process that stays receiving messages, and when a message
-%% is received, it calls the given function `Fun'.
+%% is received, it applies the given callback `{Mod, Fun, Args}'.
 %%
+%% Options:
 %% <ul>
-%% <li>`Fun': function callback called when message arrives.</li>
-%% <li>`Ctx': Any initial context which is passed as argument to the
-%% function callback in order that can be used.</li>
 %% <li>`Opts': Spawn process options. See `erlang:spawn_opt/2'.</li>
 %% </ul>
 %% @see erlang:spawn_opt/2.
 %% @end
--spec spawn_handler(
-  callback(), term(), [term()]
+-spec spawn_callback_handler(
+  module(), atom(), [term()], [term()]
 ) -> pid() | {pid(), reference()}.
-spawn_handler(Fun, Ctx, Opts) ->
-  spawn_opt(fun() -> handle(Fun, Ctx) end, Opts).
+spawn_callback_handler(Module, Fun, Args, Opts)
+    when is_atom(Module), is_atom(Fun) ->
+  spawn_opt(fun() -> handle(Module, Fun, Args) end, Opts).
 
 %% @private
-handle(Fun, Ctx) ->
+handle(erlang, apply, [Fun, FunArgs] = Args) ->
   receive
     Message ->
-      case erlang:fun_info(Fun, arity) of
-        {arity, 2} -> Fun(Ctx, Message);
-        {arity, 1} -> Fun(Message)
-      end,
-      handle(Fun, Ctx)
+      apply(erlang, apply, [Fun, [Message | FunArgs]]),
+      handle(erlang, apply, Args)
+  end;
+handle(Module, Fun, Args) ->
+  receive
+    Message ->
+      apply(Module, Fun, [Message | Args]),
+      handle(Module, Fun, Args)
   end.

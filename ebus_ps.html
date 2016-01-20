@@ -1,0 +1,126 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module ebus_ps</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module ebus_ps</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+   This is an Erlang clone of the original <code>Phoenix.PubSub</code> module.
+
+<p><b>References</b><ul><li>See
+   <a href="https://github.com/phoenixframework/phoenix">Phoenix</a></li></ul></p>
+
+<h2><a name="description">Description</a></h2>
+   This is an Erlang clone of the original <code>Phoenix.PubSub</code> module.
+   Copyright (c) 2014 Chris McCord
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-options">options()</a></h3>
+<p><tt>options() = <a href="ebus_ps_local.html#type-options">ebus_ps_local:options()</a></tt></p>
+
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#broadcast-3">broadcast/3</a></td><td>
+  Broadcasts message on given topic.</td></tr>
+<tr><td valign="top"><a href="#broadcast_from-4">broadcast_from/4</a></td><td>
+  Broadcasts message to all but <code>FromPid</code> on given topic.</td></tr>
+<tr><td valign="top"><a href="#list-1">list/1</a></td><td>
+  Returns the topic list.</td></tr>
+<tr><td valign="top"><a href="#subscribe-3">subscribe/3</a></td><td>Equivalent to <a href="#subscribe-4"><tt>subscribe(Server, Pid, Topic, [])</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#subscribe-4">subscribe/4</a></td><td>  
+Subscribes the pid to the PubSub adapter's topic.</td></tr>
+<tr><td valign="top"><a href="#subscribers-2">subscribers/2</a></td><td>  
+Returns a set of subscribers pids for the given topic.</td></tr>
+<tr><td valign="top"><a href="#unsubscribe-3">unsubscribe/3</a></td><td>
+  Unsubscribes the pid from the PubSub adapter's topic.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="broadcast-3">broadcast/3</a></h3>
+<div class="spec">
+<p><tt>broadcast(Server::atom(), Topic::binary(), Msg::term()) -&gt; ok | {error, term()}</tt><br></p>
+</div><p>
+  Broadcasts message on given topic.</p>
+
+<h3 class="function"><a name="broadcast_from-4">broadcast_from/4</a></h3>
+<div class="spec">
+<p><tt>broadcast_from(Server::atom(), FromPid::pid(), Topic::binary(), Msg::term()) -&gt; ok | {error, term()}</tt><br></p>
+</div><p>
+  Broadcasts message to all but <code>FromPid</code> on given topic.</p>
+
+<h3 class="function"><a name="list-1">list/1</a></h3>
+<div class="spec">
+<p><tt>list(Server::atom()) -&gt; [binary()]</tt><br></p>
+</div><p>
+  Returns the topic list.
+  This is an expensive and private operation. DO NOT USE IT IN PROD.</p>
+
+<h3 class="function"><a name="subscribe-3">subscribe/3</a></h3>
+<div class="spec">
+<p><tt>subscribe(Server, Pid, Topic) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#subscribe-4"><tt>subscribe(Server, Pid, Topic, [])</tt></a>.</p>
+
+
+<h3 class="function"><a name="subscribe-4">subscribe/4</a></h3>
+<div class="spec">
+<p><tt>subscribe(Server::atom(), Pid::pid(), Topic::binary(), Opts::<a href="#type-options">options()</a>) -&gt; ok | {error, term()}</tt><br></p>
+</div><p><p>  
+Subscribes the pid to the PubSub adapter's topic.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The Pid registered name of the server.</li>
+  <li><code>Pid</code>: The subscriber pid to receive pubsub messages.</li>
+  <li><code>Topic</code>: The topic to subscribe to, ie: <code>"users:123"</code>.</li>
+  <li><code>Opts</code>: The optional list of options. See below.</li>
+  </ul>
+ 
+  <b>Options:</b>
+  <br>
+  <ul>
+  <li><code>link</code>: links the subscriber to the pubsub adapter.</li>
+  <li><code>fastlane</code>: Provides a fastlane path for the broadcasts for
+  <code>broadcast()</code> events. The fastlane process is notified of a cached
+  message instead of the normal subscriber. Fastlane handlers must
+  implement <code>fastlane/1</code> callbacks which accepts a <code>broadcast()</code> struct
+  and returns a fastlaned format for the handler. For example:</li>
+  <br>
+    <pre>      ebus_ps:subscribe(
+        my_pubsub_server, self(), &lt;&lt;"topic1"&gt;&gt;,
+        [{fastlane, {FastPid, my_serializer, [&lt;&lt;"event1"&gt;&gt;]}).`</pre>
+  </ul></p>
+
+<h3 class="function"><a name="subscribers-2">subscribers/2</a></h3>
+<div class="spec">
+<p><tt>subscribers(Server::atom(), Topic::binary()) -&gt; [pid()]</tt><br></p>
+</div><p><p>  
+Returns a set of subscribers pids for the given topic.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The registered server name or pid.</li>
+  <li><code>Topic</code>: The string topic, for example <code>&lt;&lt;"users:123"&gt;&gt;</code>.</li>
+  </ul>
+ 
+  <p>Example:</p>
+ 
+  <pre>  &gt; subscribers(pubsub_server, &lt;&lt;"foo"&gt;&gt;).
+  [&lt;0.48.0&gt;, &lt;0.49.0&gt;]</pre></p>
+
+<h3 class="function"><a name="unsubscribe-3">unsubscribe/3</a></h3>
+<div class="spec">
+<p><tt>unsubscribe(Server::atom(), Pid::pid(), Topic::binary()) -&gt; ok | {error, term()}</tt><br></p>
+</div><p>
+  Unsubscribes the pid from the PubSub adapter's topic.</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Jan 20 2016, 14:32:30.</i></p>
+</body>
+</html>

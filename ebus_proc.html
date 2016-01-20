@@ -1,0 +1,134 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module ebus_proc</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module ebus_proc</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+   Process utilities.
+
+
+<h2><a name="description">Description</a></h2>
+   Process utilities.
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#messages-0">messages/0</a></td><td>Equivalent to <a href="#process_messages-1"><tt>process_messages(self())</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#messages-1">messages/1</a></td><td>
+  Returns all queued messages for the process <code>Pid</code>.</td></tr>
+<tr><td valign="top"><a href="#r_messages-1">r_messages/1</a></td><td>
+  Returns all queued messages for the process <code>Pid</code>, but doesn't
+  matter if process is local or remote.</td></tr>
+<tr><td valign="top"><a href="#spawn_callback_handler-3">spawn_callback_handler/3</a></td><td>Equivalent to <a href="#spawn_callback_handler-4"><tt>spawn_callback_handler(Module, Fun, Args, [])</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#spawn_callback_handler-4">spawn_callback_handler/4</a></td><td>
+  Spawns a process that stays receiving messages, and when a message
+  is received, it applies the given callback <code>{Mod, Fun, Args}</code>.</td></tr>
+<tr><td valign="top"><a href="#spawn_handler-1">spawn_handler/1</a></td><td>Equivalent to <a href="#spawn_handler-2"><tt>spawn_handler(Fun, [])</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#spawn_handler-2">spawn_handler/2</a></td><td>Equivalent to <a href="#spawn_handler-3"><tt>spawn_handler(Fun, Args, [])</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#spawn_handler-3">spawn_handler/3</a></td><td>
+  Same as <code>spawn_callback_handler/4</code>, but receives a <code>fun</code> as
+  callback.</td></tr>
+<tr><td valign="top"><a href="#spawn_timer_fun-1">spawn_timer_fun/1</a></td><td>
+  Spawns a linked process that sleeps for the given <code>Timeout</code>, once
+  timeout expires then process dies.</td></tr>
+<tr><td valign="top"><a href="#wait_for_msg-0">wait_for_msg/0</a></td><td>Equivalent to <a href="#wait_for_msg-1"><tt>wait_for_msg(infinity)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#wait_for_msg-1">wait_for_msg/1</a></td><td>.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="messages-0">messages/0</a></h3>
+<div class="spec">
+<p><tt>messages() -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#process_messages-1"><tt>process_messages(self())</tt></a>.</p>
+
+
+<h3 class="function"><a name="messages-1">messages/1</a></h3>
+<div class="spec">
+<p><tt>messages(Pid::pid()) -&gt; [term()]</tt><br></p>
+</div><p>
+  Returns all queued messages for the process <code>Pid</code>.</p>
+
+<h3 class="function"><a name="r_messages-1">r_messages/1</a></h3>
+<div class="spec">
+<p><tt>r_messages(Pid::pid()) -&gt; [term()]</tt><br></p>
+</div><p>
+  Returns all queued messages for the process <code>Pid</code>, but doesn't
+  matter if process is local or remote.</p>
+
+<h3 class="function"><a name="spawn_callback_handler-3">spawn_callback_handler/3</a></h3>
+<div class="spec">
+<p><tt>spawn_callback_handler(Module, Fun, Args) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#spawn_callback_handler-4"><tt>spawn_callback_handler(Module, Fun, Args, [])</tt></a>.</p>
+
+
+<h3 class="function"><a name="spawn_callback_handler-4">spawn_callback_handler/4</a></h3>
+<div class="spec">
+<p><tt>spawn_callback_handler(Module::module(), Fun::atom(), Args::[term()], Opts::[term()]) -&gt; pid() | {pid(), reference()}</tt><br></p>
+</div><p><p>
+  Spawns a process that stays receiving messages, and when a message
+  is received, it applies the given callback <code>{Mod, Fun, Args}</code>.</p>
+ 
+  Options:
+  <ul>
+  <li><code>Opts</code>: Spawn process options. See <code>erlang:spawn_opt/2</code>.</li>
+  </ul></p>
+<p><b>See also:</b> <a href="erlang.html#spawn_opt-2">erlang:spawn_opt/2</a>.</p>
+
+<h3 class="function"><a name="spawn_handler-1">spawn_handler/1</a></h3>
+<div class="spec">
+<p><tt>spawn_handler(Fun) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#spawn_handler-2"><tt>spawn_handler(Fun, [])</tt></a>.</p>
+
+
+<h3 class="function"><a name="spawn_handler-2">spawn_handler/2</a></h3>
+<div class="spec">
+<p><tt>spawn_handler(Fun, Args) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#spawn_handler-3"><tt>spawn_handler(Fun, Args, [])</tt></a>.</p>
+
+
+<h3 class="function"><a name="spawn_handler-3">spawn_handler/3</a></h3>
+<div class="spec">
+<p><tt>spawn_handler(Fun, Args, Opts) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#spawn_callback_handler-4"><tt>spawn_callback_handler(erlang, apply, [Fun, Args], Opts)</tt></a>.</p>
+<p><p>
+  Same as <code>spawn_callback_handler/4</code>, but receives a <code>fun</code> as
+  callback. This <code>fun</code> is invoked as:</p>
+ 
+  <pre>  apply(erlang, apply, [Fun, [Message | Args]])</pre>
+ 
+  Where <code>Message</code> is inserted as 1st argument in the <code>fun</code> args.</p>
+
+<h3 class="function"><a name="spawn_timer_fun-1">spawn_timer_fun/1</a></h3>
+<div class="spec">
+<p><tt>spawn_timer_fun(Timeout::timeout()) -&gt; pid()</tt><br></p>
+</div><p>
+  Spawns a linked process that sleeps for the given <code>Timeout</code>, once
+  timeout expires then process dies.</p>
+
+<h3 class="function"><a name="wait_for_msg-0">wait_for_msg/0</a></h3>
+<div class="spec">
+<p><tt>wait_for_msg() -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#wait_for_msg-1"><tt>wait_for_msg(infinity)</tt></a>.</p>
+
+
+<h3 class="function"><a name="wait_for_msg-1">wait_for_msg/1</a></h3>
+<div class="spec">
+<p><tt>wait_for_msg(Timeout::timeout()) -&gt; term() | {error, timeout}</tt><br></p>
+</div><p>
+ </p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Jan 20 2016, 14:32:30.</i></p>
+</body>
+</html>

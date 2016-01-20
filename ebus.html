@@ -1,0 +1,369 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module ebus</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module ebus</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+   Main <code>ebus` interface. This module also works as a wrapper on top
+   of `ebus_ps</code> module.
+
+<p><b>Behaviours:</b> <a href="application.html"><tt>application</tt></a>.</p>
+<p><b>See also:</b> <a href="ebus_ps.html">ebus_ps</a>.</p>
+
+<h2><a name="description">Description</a></h2>
+   Main <code>ebus` interface. This module also works as a wrapper on top
+   of `ebus_ps</code> module.
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-dispatch_fun">dispatch_fun()</a></h3>
+<p><tt>dispatch_fun() = fun(([term()]) -&gt; term())</tt></p>
+<p>Receives as argument the subscribers list. Then it should choose
+  one subscriber from the given list and return it.</p>
+
+<h3 class="typedecl"><a name="type-dispatch_opt">dispatch_opt()</a></h3>
+<p><tt>dispatch_opt() = {scope, local | global} | {dispatch_fun, <a href="#type-dispatch_fun">dispatch_fun()</a>}</tt></p>
+<p>Available dispatch options.</p>
+
+<h3 class="typedecl"><a name="type-dispatch_opts">dispatch_opts()</a></h3>
+<p><tt>dispatch_opts() = [<a href="#type-dispatch_opt">dispatch_opt()</a>]</tt></p>
+<p>Dispatch options.</p>
+
+<h3 class="typedecl"><a name="type-handler">handler()</a></h3>
+<p><tt>handler() = pid()</tt></p>
+
+
+<h3 class="typedecl"><a name="type-options">options()</a></h3>
+<p><tt>options() = <a href="ebus_ps_local.html#type-options">ebus_ps_local:options()</a></tt></p>
+<p><code>sub/4</code> options.</p>
+
+<h3 class="typedecl"><a name="type-topic">topic()</a></h3>
+<p><tt>topic() = iodata()</tt></p>
+
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#default_ps_server-0">default_ps_server/0</a></td><td>Returns default <code>ebus</code> server name: <code>ebus_ps</code>.</td></tr>
+<tr><td valign="top"><a href="#dispatch-2">dispatch/2</a></td><td>Equivalent to <a href="#dispatch-3"><tt>dispatch(Topic, Message, [])</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#dispatch-3">dispatch/3</a></td><td>Equivalent to <a href="#dispatch-4"><tt>dispatch(server(), Topic, Message, Opts)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#dispatch-4">dispatch/4</a></td><td>
+  Sends a message only to one subscriber handler of the <code>Topic</code>.</td></tr>
+<tr><td valign="top"><a href="#local_subscribers-1">local_subscribers/1</a></td><td>Equivalent to <a href="#local_subscribers-2"><tt>local_subscribers(server(), Topic)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#local_subscribers-2">local_subscribers/2</a></td><td>
+  Same as <code>subscribers/2</code> but only local subscribers handlers for the
+  given <code>Topic</code> are returned.</td></tr>
+<tr><td valign="top"><a href="#local_topics-0">local_topics/0</a></td><td>Equivalent to <a href="#local_topics-1"><tt>local_topics(server())</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#local_topics-1">local_topics/1</a></td><td>
+  Same as <code>topics/1</code> but only local topics are returned.</td></tr>
+<tr><td valign="top"><a href="#pub-2">pub/2</a></td><td>Equivalent to <a href="#pub-3"><tt>pub(server(), Topic, Message)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#pub-3">pub/3</a></td><td>  
+Sends a message to all subscribers of a topic.</td></tr>
+<tr><td valign="top"><a href="#pub_from-3">pub_from/3</a></td><td>Equivalent to <a href="#pub_from-4"><tt>pub_from(server(), From, Topic, Message)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#pub_from-4">pub_from/4</a></td><td>
+  Same as <code>pub/3</code> but message is not sent to <code>FromHandler</code>.</td></tr>
+<tr><td valign="top"><a href="#server-0">server/0</a></td><td>Returns the registered <code>ebus</code> server name.</td></tr>
+<tr><td valign="top"><a href="#start-0">start/0</a></td><td>Starts <code>ebus</code> application.</td></tr>
+<tr><td valign="top"><a href="#stop-0">stop/0</a></td><td>Stops <code>ebus</code> application.</td></tr>
+<tr><td valign="top"><a href="#sub-2">sub/2</a></td><td>Equivalent to <a href="#sub-3"><tt>sub(server(), Handler, Topic)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#sub-3">sub/3</a></td><td>Equivalent to <a href="#sub-4"><tt>sub(Server, Handler, Topic, [])</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#sub-4">sub/4</a></td><td>
+  Subscribes the <code>Handler</code> given <code>Topic</code>.</td></tr>
+<tr><td valign="top"><a href="#subscribers-1">subscribers/1</a></td><td>Equivalent to <a href="#subscribers-2"><tt>subscribers(server(), Topic)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#subscribers-2">subscribers/2</a></td><td>
+  Returns a set of all subscribers handlers (local and global)
+  for the given <code>Topic</code>.</td></tr>
+<tr><td valign="top"><a href="#topics-0">topics/0</a></td><td>Equivalent to <a href="#topics-1"><tt>topics(server())</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#topics-1">topics/1</a></td><td>  
+Returns the list of all topics (local and global) in use.</td></tr>
+<tr><td valign="top"><a href="#unsub-2">unsub/2</a></td><td>Equivalent to <a href="#unsub-3"><tt>unsub(server(), Handler, Topic)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#unsub-3">unsub/3</a></td><td>
+  Unsubscribes the given <code>Handler</code> from the <code>Topic</code>.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="default_ps_server-0">default_ps_server/0</a></h3>
+<div class="spec">
+<p><tt>default_ps_server() -&gt; ebus_ps</tt><br></p>
+</div><p>Returns default <code>ebus</code> server name: <code>ebus_ps</code>.</p>
+
+<h3 class="function"><a name="dispatch-2">dispatch/2</a></h3>
+<div class="spec">
+<p><tt>dispatch(Topic, Message) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#dispatch-3"><tt>dispatch(Topic, Message, [])</tt></a>.</p>
+
+
+<h3 class="function"><a name="dispatch-3">dispatch/3</a></h3>
+<div class="spec">
+<p><tt>dispatch(Topic, Message, Opts) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#dispatch-4"><tt>dispatch(server(), Topic, Message, Opts)</tt></a>.</p>
+
+
+<h3 class="function"><a name="dispatch-4">dispatch/4</a></h3>
+<div class="spec">
+<p><tt>dispatch(Server::atom(), Topic::<a href="#type-topic">topic()</a>, Message::term(), Opts::<a href="#type-dispatch_opts">dispatch_opts()</a>) -&gt; ok</tt><br></p>
+</div><p><p>
+  Sends a message only to one subscriber handler of the <code>Topic</code>.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The registered server name or pid.</li>
+  <li><code>Topic</code>: The string topic, for example <code>&lt;&lt;"users:123"&gt;&gt;</code>.</li>
+  <li><code>Message</code>: Any erlang term.</li>
+  <li><code>Opts</code>: The optional list of options. See below.</li>
+  </ul>
+ 
+  <b>Options:</b>
+  <br>
+  <ul>
+  <li><code>{scope, local | global}</code>: define if the message must be delivered
+  to a local or global (any) process. Default is <code>local</code>.</li>
+  <li><code>{dispatch_fun, dispatch_fun()}</code>: allows to pass a function to
+  choose a subscriber from the current subscribers handlers to a topic.</li>
+  </ul>
+ 
+  <p>Examples:</p>
+ 
+  <pre>  &gt; ebus:dispatch("bar", #{topic =&gt; "foo", payload =&gt; "hi"}).
+  ok
+  &gt; ebus:dispatch("bar", #{topic =&gt; "foo", payload =&gt; "hi"}, []).
+  ok
+  &gt; ebus:dispatch(ebus_ps, "bar", "my message",
+      [{scope, global}, {dispatch_fun, fun([H | _]) -&gt; H end}]).
+  ok</pre></p>
+
+<h3 class="function"><a name="local_subscribers-1">local_subscribers/1</a></h3>
+<div class="spec">
+<p><tt>local_subscribers(Topic) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#local_subscribers-2"><tt>local_subscribers(server(), Topic)</tt></a>.</p>
+
+
+<h3 class="function"><a name="local_subscribers-2">local_subscribers/2</a></h3>
+<div class="spec">
+<p><tt>local_subscribers(Server::atom(), Topic::<a href="#type-topic">topic()</a>) -&gt; [pid()]</tt><br></p>
+</div><p><p>
+  Same as <code>subscribers/2</code> but only local subscribers handlers for the
+  given <code>Topic</code> are returned.</p>
+ 
+  <p>Example:</p>
+ 
+  <pre>  &gt; ebus:local_subscribers(ebus_ps, &lt;&lt;"foo"&gt;&gt;).
+  [&lt;0.48.0&gt;, &lt;0.49.0&gt;]</pre></p>
+
+<h3 class="function"><a name="local_topics-0">local_topics/0</a></h3>
+<div class="spec">
+<p><tt>local_topics() -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#local_topics-1"><tt>local_topics(server())</tt></a>.</p>
+
+
+<h3 class="function"><a name="local_topics-1">local_topics/1</a></h3>
+<div class="spec">
+<p><tt>local_topics(Server::atom()) -&gt; [binary()]</tt><br></p>
+</div><p><p>
+  Same as <code>topics/1</code> but only local topics are returned.</p>
+ 
+  <p>Example:</p>
+ 
+  <pre>  &gt; ebus:local_topics().
+  [&lt;&lt;"foo"&gt;&gt;, &lt;&lt;"bar"&gt;&gt;]
+  &gt; ebus:local_topics(ebus_ps).
+  [&lt;&lt;"foo"&gt;&gt;, &lt;&lt;"bar"&gt;&gt;]</pre></p>
+
+<h3 class="function"><a name="pub-2">pub/2</a></h3>
+<div class="spec">
+<p><tt>pub(Topic, Message) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#pub-3"><tt>pub(server(), Topic, Message)</tt></a>.</p>
+
+
+<h3 class="function"><a name="pub-3">pub/3</a></h3>
+<div class="spec">
+<p><tt>pub(Server::atom(), Topic::<a href="#type-topic">topic()</a>, Message::term()) -&gt; ok | {error, term()}</tt><br></p>
+</div><p><p>  
+Sends a message to all subscribers of a topic.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The registered server name or pid.</li>
+  <li><code>Topic</code>: The string topic, for example <code>&lt;&lt;"users:123"&gt;&gt;</code>.</li>
+  <li><code>Message</code>: Any erlang term.</li>
+  </ul>
+ 
+  <p>Examples:</p>
+ 
+  <pre>  &gt; ebus:pub("bar", #{topic =&gt; "foo", payload =&gt; "hi"}).
+  ok
+  &gt; ebus:pub(ebus_ps, "bar", #{topic =&gt; "foo", payload =&gt; "hi"}).
+  ok</pre></p>
+
+<h3 class="function"><a name="pub_from-3">pub_from/3</a></h3>
+<div class="spec">
+<p><tt>pub_from(From, Topic, Message) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#pub_from-4"><tt>pub_from(server(), From, Topic, Message)</tt></a>.</p>
+
+
+<h3 class="function"><a name="pub_from-4">pub_from/4</a></h3>
+<div class="spec">
+<p><tt>pub_from(Server::atom(), FromHandler::<a href="#type-handler">handler()</a>, Topic::<a href="#type-topic">topic()</a>, Message::term()) -&gt; ok | {error, term()}</tt><br></p>
+</div><p><p>
+  Same as <code>pub/3</code> but message is not sent to <code>FromHandler</code>.</p>
+ 
+  <p>Examples:</p>
+ 
+  <pre>  &gt; ebus:pub_from(self(), "foo", &lt;&lt;"message"&gt;&gt;).
+  ok
+  &gt; ebus:pub_from(ebus_ps, self(), "foo", &lt;&lt;"message"&gt;&gt;).
+  ok</pre></p>
+
+<h3 class="function"><a name="server-0">server/0</a></h3>
+<div class="spec">
+<p><tt>server() -&gt; atom()</tt><br></p>
+</div><p>Returns the registered <code>ebus</code> server name.</p>
+
+<h3 class="function"><a name="start-0">start/0</a></h3>
+<div class="spec">
+<p><tt>start() -&gt; {ok, term()} | {error, term()}</tt><br></p>
+</div><p>Starts <code>ebus</code> application.</p>
+
+<h3 class="function"><a name="stop-0">stop/0</a></h3>
+<div class="spec">
+<p><tt>stop() -&gt; ok | {error, term()}</tt><br></p>
+</div><p>Stops <code>ebus</code> application.</p>
+
+<h3 class="function"><a name="sub-2">sub/2</a></h3>
+<div class="spec">
+<p><tt>sub(Handler, Topic) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#sub-3"><tt>sub(server(), Handler, Topic)</tt></a>.</p>
+
+
+<h3 class="function"><a name="sub-3">sub/3</a></h3>
+<div class="spec">
+<p><tt>sub(Server, Handler, Topic) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#sub-4"><tt>sub(Server, Handler, Topic, [])</tt></a>.</p>
+
+
+<h3 class="function"><a name="sub-4">sub/4</a></h3>
+<div class="spec">
+<p><tt>sub(Server::atom(), Handler::<a href="#type-handler">handler()</a>, Topic::<a href="#type-topic">topic()</a>, Opts::<a href="#type-options">options()</a>) -&gt; ok | {error, term()}</tt><br></p>
+</div><p><p>
+  Subscribes the <code>Handler</code> given <code>Topic</code>.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The Pid registered name of the server.</li>
+  <li><code>Handler</code>: The subscriber pid to receive pubsub messages.</li>
+  <li><code>Topic</code>: The topic to subscribe to, ie: <code>"users:123"</code>.</li>
+  <li><code>Opts</code>: The optional list of options. See below.</li>
+  </ul>
+ 
+  <b>Options:</b>
+  <br>
+  <ul>
+  <li><code>{link, _}</code>: links the subscriber to the pubsub adapter.</li>
+  <li><code>{fastlane, ebus_ps_local:fastlane()}</code>: Provides a fastlane path
+  for the broadcasts for <code>broadcast()</code> events. The fastlane process is
+  notified of a cached message instead of the normal subscriber.
+  Fastlane handlers must implement <code>fastlane/1</code> callbacks which accepts a
+  <code>broadcast()</code> struct and returns a fastlaned format for the handler.</li>
+  </ul>
+ 
+  <p>Examples:</p>
+ 
+  <pre>  &gt; ebus:sub(self(), &lt;&lt;"foo"&gt;&gt;).
+  ok
+  &gt; ebus:sub(ebus_ps, self(), &lt;&lt;"foo"&gt;&gt;).
+  ok
+  &gt; ebus:sub(ebus_ps, self(), &lt;&lt;"foo"&gt;&gt;, []).
+  ok
+  &gt; ebus:sub(ebus_ps, self(), &lt;&lt;"foo"&gt;&gt;,
+      [{fastlane, {FastPid, my_serializer, [&lt;&lt;"event1"&gt;&gt;]}]).
+  ok</pre></p>
+
+<h3 class="function"><a name="subscribers-1">subscribers/1</a></h3>
+<div class="spec">
+<p><tt>subscribers(Topic) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#subscribers-2"><tt>subscribers(server(), Topic)</tt></a>.</p>
+
+
+<h3 class="function"><a name="subscribers-2">subscribers/2</a></h3>
+<div class="spec">
+<p><tt>subscribers(Server::atom(), Topic::<a href="#type-topic">topic()</a>) -&gt; [pid()]</tt><br></p>
+</div><p><p>
+  Returns a set of all subscribers handlers (local and global)
+  for the given <code>Topic</code>.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The registered server name or pid.</li>
+  <li><code>Topic</code>: The string topic, for example <code>&lt;&lt;"users:123"&gt;&gt;</code>.</li>
+  </ul>
+ 
+  <p>Example:</p>
+ 
+  <pre>  &gt; ebus:subscribers(ebus_ps, &lt;&lt;"foo"&gt;&gt;).
+  [&lt;0.48.0&gt;, &lt;0.49.0&gt;]</pre></p>
+
+<h3 class="function"><a name="topics-0">topics/0</a></h3>
+<div class="spec">
+<p><tt>topics() -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#topics-1"><tt>topics(server())</tt></a>.</p>
+
+
+<h3 class="function"><a name="topics-1">topics/1</a></h3>
+<div class="spec">
+<p><tt>topics(Server::atom()) -&gt; [binary()]</tt><br></p>
+</div><p><p>  
+Returns the list of all topics (local and global) in use.  
+This is an expensive and private operation.</p>
+ 
+  <p><font color="red">This is an expensive operation.
+  <b> DO NOT USE IT IN PROD</b></font></p>
+ 
+  <p>Example:</p>
+ 
+  <pre>  &gt; ebus:topics().
+  [&lt;&lt;"foo"&gt;&gt;, &lt;&lt;"bar"&gt;&gt;]
+  &gt; ebus:topics(ebus_ps).
+  [&lt;&lt;"foo"&gt;&gt;, &lt;&lt;"bar"&gt;&gt;]</pre></p>
+
+<h3 class="function"><a name="unsub-2">unsub/2</a></h3>
+<div class="spec">
+<p><tt>unsub(Handler, Topic) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#unsub-3"><tt>unsub(server(), Handler, Topic)</tt></a>.</p>
+
+
+<h3 class="function"><a name="unsub-3">unsub/3</a></h3>
+<div class="spec">
+<p><tt>unsub(Server::atom(), Handler::<a href="#type-handler">handler()</a>, Topic::<a href="#type-topic">topic()</a>) -&gt; ok | {error, term()}</tt><br></p>
+</div><p><p>
+  Unsubscribes the given <code>Handler</code> from the <code>Topic</code>.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The registered server name or pid.</li>
+  <li><code>Handler</code>: The subscriber pid.</li>
+  <li><code>Topic</code>: The string topic, for example <code>&lt;&lt;"users:123"&gt;&gt;</code>.</li>
+  </ul>
+ 
+  <p>Example:</p>
+ 
+  <pre>  &gt; ebus:unsub(self(), &lt;&lt;"foo"&gt;&gt;).
+  ok
+  &gt; ebus:unsub(ebus_ps, self(), &lt;&lt;"foo"&gt;&gt;).
+  ok</pre></p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Jan 20 2016, 14:32:31.</i></p>
+</body>
+</html>

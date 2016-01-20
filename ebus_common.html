@@ -1,0 +1,101 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module ebus_common</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module ebus_common</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+   Common utilities.
+
+
+<h2><a name="description">Description</a></h2>
+   Common utilities.
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#build_name-1">build_name/1</a></td><td>Equivalent to <a href="#build_name-2"><tt>build_name(L, &lt;&lt;"_"&gt;&gt;)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#build_name-2">build_name/2</a></td><td>
+  Build a name given the list of terms, then they are transformed
+  to binary and concatenated by <code>Separator</code>.</td></tr>
+<tr><td valign="top"><a href="#keyfind-2">keyfind/2</a></td><td>Equivalent to <a href="#keyfind-3"><tt>keyfind(Key, TupleList, nil)</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#keyfind-3">keyfind/3</a></td><td>
+  Searches into the list of tuples <code>TupleList</code> for a tuple whose Nth element
+  compares equal to <code>Key</code>.</td></tr>
+<tr><td valign="top"><a href="#rand_elem-1">rand_elem/1</a></td><td>Returns a random element from given list <code>L</code>.</td></tr>
+<tr><td valign="top"><a href="#to_atom-1">to_atom/1</a></td><td>Converts any type to atom.</td></tr>
+<tr><td valign="top"><a href="#to_bin-1">to_bin/1</a></td><td>Converts any type to binary.</td></tr>
+<tr><td valign="top"><a href="#to_float-1">to_float/1</a></td><td>Converts any type to float.</td></tr>
+<tr><td valign="top"><a href="#to_int-1">to_int/1</a></td><td>Converts any type to integer.</td></tr>
+<tr><td valign="top"><a href="#to_list-1">to_list/1</a></td><td>Converts any type to list.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="build_name-1">build_name/1</a></h3>
+<div class="spec">
+<p><tt>build_name(L) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#build_name-2"><tt>build_name(L, &lt;&lt;"_"&gt;&gt;)</tt></a>.</p>
+
+
+<h3 class="function"><a name="build_name-2">build_name/2</a></h3>
+<div class="spec">
+<p><tt>build_name(L::[any()], Separator::iodata()) -&gt; atom()</tt><br></p>
+</div><p>
+  Build a name given the list of terms, then they are transformed
+  to binary and concatenated by <code>Separator</code>.</p>
+
+<h3 class="function"><a name="keyfind-2">keyfind/2</a></h3>
+<div class="spec">
+<p><tt>keyfind(Key, TupleList) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#keyfind-3"><tt>keyfind(Key, TupleList, nil)</tt></a>.</p>
+
+
+<h3 class="function"><a name="keyfind-3">keyfind/3</a></h3>
+<div class="spec">
+<p><tt>keyfind(Key::term(), TupleList::[tuple()], Default::term()) -&gt; term()</tt><br></p>
+</div><p>
+  Searches into the list of tuples <code>TupleList</code> for a tuple whose Nth element
+  compares equal to <code>Key</code>. Returns Tuple's value if such a tuple is
+  found, otherwise <code>Default</code>.</p>
+
+<h3 class="function"><a name="rand_elem-1">rand_elem/1</a></h3>
+<div class="spec">
+<p><tt>rand_elem(L::[term()]) -&gt; term()</tt><br></p>
+</div><p>Returns a random element from given list <code>L</code>.</p>
+
+<h3 class="function"><a name="to_atom-1">to_atom/1</a></h3>
+<div class="spec">
+<p><tt>to_atom(Data::any()) -&gt; atom()</tt><br></p>
+</div><p>Converts any type to atom.</p>
+
+<h3 class="function"><a name="to_bin-1">to_bin/1</a></h3>
+<div class="spec">
+<p><tt>to_bin(Data::any()) -&gt; binary()</tt><br></p>
+</div><p>Converts any type to binary.</p>
+
+<h3 class="function"><a name="to_float-1">to_float/1</a></h3>
+<div class="spec">
+<p><tt>to_float(Data::any()) -&gt; float()</tt><br></p>
+</div><p>Converts any type to float.</p>
+
+<h3 class="function"><a name="to_int-1">to_int/1</a></h3>
+<div class="spec">
+<p><tt>to_int(Data::any()) -&gt; integer()</tt><br></p>
+</div><p>Converts any type to integer.</p>
+
+<h3 class="function"><a name="to_list-1">to_list/1</a></h3>
+<div class="spec">
+<p><tt>to_list(Data::any()) -&gt; list()</tt><br></p>
+</div><p>Converts any type to list.</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Jan 20 2016, 14:32:30.</i></p>
+</body>
+</html>

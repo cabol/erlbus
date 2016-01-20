@@ -1,0 +1,6 @@
+%% encoding: UTF-8
+{application,ebus}.
+{modules,[ebus,ebus_broadcast,ebus_common,ebus_message,ebus_proc,ebus_ps,
+          ebus_ps_gc,ebus_ps_local,ebus_ps_local_sup,ebus_ps_pg2,
+          ebus_ps_pg2_server,ebus_reply,ebus_serializer,ebus_sup,
+          ebus_supervisor,ebus_supervisor_spec,ebus_task]}.

@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module ebus_ps_local</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module ebus_ps_local</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>
+   This is an Erlang clone of the original <code>Phoenix.PubSub.Local</code>
+   module.
+
+<p><b>Behaviours:</b> <a href="gen_server.html"><tt>gen_server</tt></a>.</p>
+<p><b>References</b><ul><li>See
+   <a href="https://github.com/phoenixframework/phoenix">Phoenix</a></li></ul></p>
+
+<h2><a name="description">Description</a></h2>
+   This is an Erlang clone of the original <code>Phoenix.PubSub.Local</code>
+   module.
+   Copyright (c) 2014 Chris McCord
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-fastlane">fastlane()</a></h3>
+<p><tt>fastlane() = {FastlanePid::pid(), Serializer::module(), EventIntercepts::[term()]}</tt></p>
+<p>Fastlane definition.</p>
+
+<h3 class="typedecl"><a name="type-option">option()</a></h3>
+<p><tt>option() = {link, any()} | {fastlane, <a href="#type-fastlane">fastlane()</a>}</tt></p>
+<p><code>subscribe/5</code> function options.</p>
+
+<h3 class="typedecl"><a name="type-options">options()</a></h3>
+<p><tt>options() = [<a href="#type-option">option()</a>]</tt></p>
+
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#broadcast-5">broadcast/5</a></td><td>  
+Sends a message to all subscribers of a topic.</td></tr>
+<tr><td valign="top"><a href="#gc_name-2">gc_name/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#list-2">list/2</a></td><td>  
+Returns the topic list for all local shards.</td></tr>
+<tr><td valign="top"><a href="#list_by_shard-2">list_by_shard/2</a></td><td>  
+Returns the topic list for the given shard.</td></tr>
+<tr><td valign="top"><a href="#local_name-2">local_name/2</a></td><td></td></tr>
+<tr><td valign="top"><a href="#start_link-2">start_link/2</a></td><td>  
+Starts the server.</td></tr>
+<tr><td valign="top"><a href="#subscribe-4">subscribe/4</a></td><td>Equivalent to <a href="#subscribe-5"><tt>subscribe(Server, PoolSize, Pid, Topic, [])</tt></a>.
+</td></tr>
+<tr><td valign="top"><a href="#subscribe-5">subscribe/5</a></td><td>  
+Subscribes the pid to the topic.</td></tr>
+<tr><td valign="top"><a href="#subscribers-3">subscribers/3</a></td><td>  
+Returns a set of subscribers pids for the given topic.</td></tr>
+<tr><td valign="top"><a href="#subscribers_by_shard-3">subscribers_by_shard/3</a></td><td>
+  Returns a set of subscribers pids for the given topic and shard.</td></tr>
+<tr><td valign="top"><a href="#subscribers_with_fastlanes-3">subscribers_with_fastlanes/3</a></td><td>
+  Returns a set of subscribers pids for the given topic and shard  with
+  fastlane tuples.</td></tr>
+<tr><td valign="top"><a href="#subscription-3">subscription/3</a></td><td>
+  Returns a list of topics which <code>Pid</code> is subscribed.</td></tr>
+<tr><td valign="top"><a href="#unsubscribe-4">unsubscribe/4</a></td><td>  
+Unsubscribes the pid from the topic.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="broadcast-5">broadcast/5</a></h3>
+<div class="spec">
+<p><tt>broadcast(Server::atom(), PoolSize::pos_integer(), From::pid(), Topic::binary(), Msg::term()) -&gt; ok</tt><br></p>
+</div><p><p>  
+Sends a message to all subscribers of a topic.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The registered server name or pid.</li>
+  <li><code>Topic</code>: The string topic, for example <code>&lt;&lt;"users:123"&gt;&gt;</code>.</li>
+  </ul>
+ 
+  <p>Examples:</p>
+ 
+  <pre>  &gt; broadcast(pubsub_server, self(), &lt;&lt;"foo"&gt;&gt;).
+  ok
+  &gt; broadcast(pubsub_server, none, &lt;&lt;"bar"&gt;&gt;).
+  ok</pre></p>
+
+<h3 class="function"><a name="gc_name-2">gc_name/2</a></h3>
+<div class="spec">
+<p><tt>gc_name(Server::atom(), Shard::non_neg_integer()) -&gt; atom()</tt><br></p>
+</div>
+
+<h3 class="function"><a name="list-2">list/2</a></h3>
+<div class="spec">
+<p><tt>list(Server::atom(), PoolSize::pos_integer()) -&gt; [binary()]</tt><br></p>
+</div><p><p>  
+Returns the topic list for all local shards.</p>
+ 
+  <p><font color="red">This is an expensive and private operation.
+  <b> DO NOT USE IT IN PROD</b></font></p></p>
+
+<h3 class="function"><a name="list_by_shard-2">list_by_shard/2</a></h3>
+<div class="spec">
+<p><tt>list_by_shard(Server::atom(), Shard::non_neg_integer()) -&gt; [binary()]</tt><br></p>
+</div><p><p>  
+Returns the topic list for the given shard.</p>
+ 
+  <p><font color="red">This is an expensive and private operation.
+  <b> DO NOT USE IT IN PROD</b></font></p></p>
+
+<h3 class="function"><a name="local_name-2">local_name/2</a></h3>
+<div class="spec">
+<p><tt>local_name(Server::atom(), Shard::non_neg_integer()) -&gt; atom()</tt><br></p>
+</div>
+
+<h3 class="function"><a name="start_link-2">start_link/2</a></h3>
+<div class="spec">
+<p><tt>start_link(ServerName::atom(), GCName::atom()) -&gt; <a href="gen.html#type-start_ret">gen:start_ret()</a></tt><br></p>
+</div><p><p>  
+Starts the server.</p>
+ 
+  <ul>
+  <li><code>ServerName</code>: The name to register the server under.</li>
+  </ul></p>
+
+<h3 class="function"><a name="subscribe-4">subscribe/4</a></h3>
+<div class="spec">
+<p><tt>subscribe(Server, PoolSize, Pid, Topic) -&gt; any()</tt></p>
+</div><p>Equivalent to <a href="#subscribe-5"><tt>subscribe(Server, PoolSize, Pid, Topic, [])</tt></a>.</p>
+
+
+<h3 class="function"><a name="subscribe-5">subscribe/5</a></h3>
+<div class="spec">
+<p><tt>subscribe(Server::atom(), PoolSize::pos_integer(), Pid::pid(), Topic::binary(), Opts::<a href="#type-options">options()</a>) -&gt; ok</tt><br></p>
+</div><p><p>  
+Subscribes the pid to the topic.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The Pid registered name of the server.</li>
+  <li><code>Pid</code>: The subscriber pid to receive pubsub messages.</li>
+  <li><code>Topic</code>: The topic to subscribe to, ie: <code>"users:123"</code>.</li>
+  <li><code>Opts</code>: The optional list of options. See below.</li>
+  </ul>
+ 
+  <b>Options:</b>
+  <br>
+  <ul>
+  <li><code>link</code>: links the subscriber to the pubsub adapter.</li>
+  <li><code>fastlane</code>: Provides a fastlane path for the broadcasts for
+  <code>broadcast()</code> events. The fastlane process is notified of a cached
+  message instead of the normal subscriber. Fastlane handlers must
+  implement <code>fastlane/1</code> callbacks which accepts a <code>broadcast()</code> struct
+  and returns a fastlaned format for the handler.</li>
+  </ul>
+ 
+  <p>Examples:</p>
+ 
+  <pre>  &gt; subscribe(pubsub_server, self(), &lt;&lt;"foo"&gt;&gt;, []).
+  ok
+  &gt; subscribe(pubsub_server, self(), &lt;&lt;"foo"&gt;&gt;,
+      [{fastlane, {FastPid, my_serializer, [&lt;&lt;"event1"&gt;&gt;]}]).
+  ok</pre></p>
+
+<h3 class="function"><a name="subscribers-3">subscribers/3</a></h3>
+<div class="spec">
+<p><tt>subscribers(Server::atom(), PoolSize::pos_integer(), Topic::binary()) -&gt; [pid()]</tt><br></p>
+</div><p><p>  
+Returns a set of subscribers pids for the given topic.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The registered server name or pid.</li>
+  <li><code>Topic</code>: The string topic, for example <code>&lt;&lt;"users:123"&gt;&gt;</code>.</li>
+  </ul>
+ 
+  <p>Examples:</p>
+ 
+  <pre>  &gt; subscribers(pubsub_server, &lt;&lt;"foo"&gt;&gt;).
+  [&lt;0.48.0&gt;, &lt;0.49.0&gt;]</pre></p>
+
+<h3 class="function"><a name="subscribers_by_shard-3">subscribers_by_shard/3</a></h3>
+<div class="spec">
+<p><tt>subscribers_by_shard(Server::atom(), Topic::binary(), Shard::non_neg_integer()) -&gt; [pid()]</tt><br></p>
+</div><p>
+  Returns a set of subscribers pids for the given topic and shard.</p>
+<p><b>See also:</b> <a href="#subscribers-3">subscribers/3</a>.</p>
+
+<h3 class="function"><a name="subscribers_with_fastlanes-3">subscribers_with_fastlanes/3</a></h3>
+<div class="spec">
+<p><tt>subscribers_with_fastlanes(Server::atom(), Topic::binary(), Shard::non_neg_integer()) -&gt; [{pid(), nil | term()}]</tt><br></p>
+</div><p>
+  Returns a set of subscribers pids for the given topic and shard  with
+  fastlane tuples.</p>
+<p><b>See also:</b> <a href="#subscribers_by_shard-3">subscribers_by_shard/3</a>.</p>
+
+<h3 class="function"><a name="subscription-3">subscription/3</a></h3>
+<div class="spec">
+<p><tt>subscription(Server::atom(), PoolSize::non_neg_integer(), Pid::pid()) -&gt; [binary()]</tt><br></p>
+</div><p><p>
+  Returns a list of topics which <code>Pid</code> is subscribed.</p>
+ 
+  <p><font color="red">This is an expensive and private operation.
+  <b> DO NOT USE IT IN PROD</b></font></p></p>
+
+<h3 class="function"><a name="unsubscribe-4">unsubscribe/4</a></h3>
+<div class="spec">
+<p><tt>unsubscribe(Server::atom(), PoolSize::pos_integer(), Pid::pid(), Topic::binary()) -&gt; ok</tt><br></p>
+</div><p><p>  
+Unsubscribes the pid from the topic.</p>
+ 
+  <ul>
+  <li><code>Server</code>: The registered server name or pid.</li>
+  <li><code>Pid</code>: The subscriber pid.</li>
+  <li><code>Topic</code>: The string topic, for example <code>&lt;&lt;"users:123"&gt;&gt;</code>.</li>
+  </ul>
+ 
+  <p>Example:</p>
+ 
+  <pre>  &gt; unsubscribe(pubsub_server, self(), &lt;&lt;"foo"&gt;&gt;).
+  ok</pre></p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc, Jan 20 2016, 14:32:30.</i></p>
+</body>
+</html>

@@ -96,11 +96,9 @@ handle_call(_Request, _From, State) ->
 handle_cast({down, Pid}, #{pids := Pids, topics := Topics} = State) ->
   try
     Topics0 = ets:lookup_element(Pids, Pid, 2),
-    lists:foreach(
-      fun(Topic) ->
-        true = ets:match_delete(Topics, {Topic, {Pid, '_'}})
-      end, Topics0
-    ),
+    lists:foreach(fun(Topic) ->
+      true = ets:match_delete(Topics, {Topic, {Pid, '_'}})
+    end, Topics0),
     true = ets:match_delete(Pids, {Pid, '_'})
   catch
     error:badarg -> badarg

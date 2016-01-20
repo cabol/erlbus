@@ -300,7 +300,7 @@ exit(_Info, _MFA, _LogReason, Reason)
     orelse (tuple_size(Reason) == 2 andalso element(1, Reason) == shutdown) ->
   exit(Reason);
 exit(_Info, _MFA, _LogReason, Reason) ->
-
+  % @TODO: build log message
   exit(Reason).
 
 %% @private

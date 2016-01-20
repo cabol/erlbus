@@ -43,14 +43,12 @@ broadcast(Name, PoolSize, FromPid, Topic, Msg) ->
     {error, {no_such_group, _}} ->
       {error, no_such_group};
     Pids when is_list(Pids) ->
-      lists:foreach(
-        fun
-          (Pid) when node(Pid) == node() ->
-            ebus_ps_local:broadcast(Name, PoolSize, FromPid, Topic, Msg);
-          (Pid) ->
-            Pid ! {forward_to_local, FromPid, PoolSize, Topic, Msg}
-        end, Pids
-      )
+      lists:foreach(fun
+        (Pid) when node(Pid) == node() ->
+          ebus_ps_local:broadcast(Name, PoolSize, FromPid, Topic, Msg);
+        (Pid) ->
+          Pid ! {forward_to_local, FromPid, PoolSize, Topic, Msg}
+      end, Pids)
   end.
 
 %%%===================================================================

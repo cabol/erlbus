@@ -9,7 +9,6 @@
 -export([keyfind/2, keyfind/3, rand_elem/1]).
 -export([build_name/1, build_name/2]).
 -export([to_bin/1, to_atom/1, to_int/1, to_float/1, to_list/1]).
--export([pmap/2]).
 
 %%%===================================================================
 %%% API
@@ -117,28 +116,3 @@ to_list(Data) when is_pid(Data); is_reference(Data); is_tuple(Data) ->
   integer_to_list(erlang:phash2(Data));
 to_list(Data) ->
   Data.
-
-%% @doc
-%% Applies fun `F' to each element of `L' in a separate process. The results
-%% returned may not be in the same order as they appear in `L'.
-%% @end
-pmap(F, L) ->
-  S = self(),
-  Ref = erlang:make_ref(),
-  lists:foreach(
-    fun(I) ->
-      spawn_link(fun() -> do_f(S, Ref, F, I) end)
-    end, L
-  ),
-  gather(length(L), Ref, []).
-
-%% @private
-do_f(Parent, Ref, F, I) ->
-  Parent ! {Ref, (catch F(I))}.
-
-%% @private
-gather(0, _, L) -> L;
-gather(N, Ref, L) ->
-  receive
-    {Ref, Ret} -> gather(N - 1, Ref, [Ret | L])
-  end.

@@ -77,9 +77,7 @@
 %% @end
 -spec start_link(atom(), atom()) -> gen:start_ret().
 start_link(ServerName, GCName) ->
-  gen_server:start_link(
-    {local, ServerName}, ?MODULE, [ServerName, GCName], []
-  ).
+  gen_server:start_link({local, ServerName}, ?MODULE, [ServerName, GCName], []).
 
 %% @equiv subscribe(Server, PoolSize, Pid, Topic, [])
 subscribe(Server, PoolSize, Pid, Topic) ->
@@ -173,15 +171,12 @@ broadcast(Server, 1, From, Topic, Msg) when is_atom(Server) ->
   ok;
 broadcast(Server, PoolSize, From, Topic, Msg) when is_atom(Server) ->
   Parent = self(),
-  Fun = fun(Shard) ->
-    ebus_task:await(
-      ebus_task:async(fun() ->
-        do_broadcast(Server, Shard, From, Topic, Msg),
-        unlink(Parent)
-      end)
-    )
-  end,
-  lists:foreach(Fun, lists:seq(0, PoolSize - 1)).
+  lists:foreach(fun(Shard) ->
+    ebus_task:await(ebus_task:async(fun() ->
+      do_broadcast(Server, Shard, From, Topic, Msg),
+      unlink(Parent)
+    end))
+  end, lists:seq(0, PoolSize - 1)).
 
 %% @private
 do_broadcast(Server, Shard, From, Topic,
@@ -212,14 +207,12 @@ do_broadcast(Server, Shard, From, Topic,
   Subscribers = subscribers_with_fastlanes(Server, Topic, Shard),
   lists:foldl(Reduce, #{}, Subscribers);
 do_broadcast(Server, Shard, From, Topic, Msg) ->
-  lists:foreach(
-    fun
-      (Pid) when Pid == From ->
-        noop;
-      (Pid) ->
-        Pid ! Msg
-    end, subscribers_by_shard(Server, Topic, Shard)
-  ).
+  lists:foreach(fun
+    (Pid) when Pid == From ->
+      noop;
+    (Pid) ->
+      Pid ! Msg
+  end, subscribers_by_shard(Server, Topic, Shard)).
 
 %% @doc
 %% Returns a set of subscribers pids for the given topic.
@@ -238,11 +231,9 @@ do_broadcast(Server, Shard, From, Topic, Msg) ->
 %% @end
 -spec subscribers(atom(), pos_integer(), binary()) -> [pid()].
 subscribers(Server, PoolSize, Topic) when is_atom(Server) ->
-  lists:foldl(
-    fun(Shard, Acc) ->
-      Acc ++ subscribers_by_shard(Server, Topic, Shard)
-    end, [], lists:seq(0, PoolSize - 1)
-  ).
+  lists:foldl(fun(Shard, Acc) ->
+    Acc ++ subscribers_by_shard(Server, Topic, Shard)
+  end, [], lists:seq(0, PoolSize - 1)).
 
 %% @doc
 %% Returns a set of subscribers pids for the given topic and shard.
@@ -276,11 +267,9 @@ subscribers_with_fastlanes(Server, Topic, Shard) when is_atom(Server) ->
 %% @end
 -spec list(atom(), pos_integer()) -> [binary()].
 list(Server, PoolSize) ->
-  lists:foldl(
-    fun(Shard, Acc) ->
-      Acc ++ list_by_shard(Server, Shard)
-    end, [], lists:seq(0, PoolSize - 1)
-  ).
+  lists:foldl(fun(Shard, Acc) ->
+    Acc ++ list_by_shard(Server, Shard)
+  end, [], lists:seq(0, PoolSize - 1)).
 
 %% @doc
 %% Returns the topic list for the given shard.
@@ -290,12 +279,10 @@ list(Server, PoolSize) ->
 %% @end
 -spec list_by_shard(atom(), non_neg_integer()) -> [binary()].
 list_by_shard(Server, Shard) when is_atom(Server) ->
-  lists:usort(
-    ets:select(
-      local_for_shard(Shard, Server),
-      [{{'$1', '_'}, [], ['$1']}]
-    )
-  ).
+  lists:usort(ets:select(
+    local_for_shard(Shard, Server),
+    [{{'$1', '_'}, [], ['$1']}]
+  )).
 
 %% @doc
 %% Returns a list of topics which `Pid' is subscribed.

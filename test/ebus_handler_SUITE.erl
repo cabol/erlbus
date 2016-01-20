@@ -63,8 +63,8 @@ t_handler(_Config) ->
   end,
 
   % create some handlers
-  {H1, Ref1} = ebus_process:spawn_handler(CB1, [], [monitor]),
-  H2 = ebus_process:spawn_handler(CB2, [<<"H2">>, h2]),
+  {H1, Ref1} = ebus_proc:spawn_handler(CB1, [], [monitor]),
+  H2 = ebus_proc:spawn_handler(CB2, [<<"H2">>, h2]),
 
   % subscribe local process
   ok = ebus:sub(H1, <<"foo">>),
@@ -106,7 +106,7 @@ t_handler(_Config) ->
 
   % kill handlers and check
   exit(H1, kill),
-  {'DOWN', Ref1, _, _, _} = ebus_process:wait_for_msg(5000),
+  {'DOWN', Ref1, _, _, _} = ebus_proc:wait_for_msg(5000),
   timer:sleep(500),
   1 = length(ebus:subscribers(<<"foo">>)),
 
@@ -123,9 +123,9 @@ t_callback_handler(_Config) ->
   end,
 
   % create some handlers
-  H1 = ebus_process:spawn_callback_handler(?MODULE, my_callback, [<<"H1">>]),
-  H2 = ebus_process:spawn_handler(CB2, [<<"H2">>]),
-  H3 = ebus_process:spawn_handler(CB1),
+  H1 = ebus_proc:spawn_callback_handler(?MODULE, my_callback, [<<"H1">>]),
+  H2 = ebus_proc:spawn_handler(CB2, [<<"H2">>]),
+  H3 = ebus_proc:spawn_handler(CB1),
 
   % subscribe local process
   [ok, ok, ok] = [ebus:sub(H, <<"foo">>) || H <- [H1, H2, H3]],

@@ -58,11 +58,11 @@ ebus:pub("foo", {foo, "hi"}).
 ok
 
 % check received message for Pid
-ebus_process:messages(Pid).             
+ebus_proc:messages(Pid).             
 [{foo,"hi"}]
 
 % check received message for self
-ebus_process:messages(self()).             
+ebus_proc:messages(self()).             
 [{foo,"hi"}]
 
 % unsubscribe self
@@ -74,11 +74,11 @@ ebus:pub("foo", {foo, "hello"}).
 ok
 
 % check received message for Pid
-ebus_process:messages(Pid).             
+ebus_proc:messages(Pid).             
 [{foo,"hi"},{foo,"hello"}]
 
 % check received message for self (last message didn't arrive)
-ebus_process:messages(self()).             
+ebus_proc:messages(self()).             
 [{foo,"hi"}]
 
 % check subscribers (only Pid should be in the returned list)
@@ -102,11 +102,11 @@ ebus:pub("bar", {bar, "hi bar"}).
 ok
 
 % check received message for Pid (last message didn't arrive)
-ebus_process:messages(Pid).             
+ebus_proc:messages(Pid).             
 [{foo,"hi"},{foo,"hello"}]
 
 % check received message for self
-ebus_process:messages(self()).             
+ebus_proc:messages(self()).             
 [{foo,"hi"},{bar,"hi bar"}]
 ```
 
@@ -138,7 +138,7 @@ So, let's repeat the above exercise but now in two nodes.
 In the `node1` create a handler and subscription to some topic:
 
 ```erlang
-% create a callback fun to use ebus_process utility
+% create a callback fun to use ebus_proc utility
 CB1 = fun(Msg) ->
   io:format("CB1: ~p~n", [Msg])
 end
@@ -151,10 +151,10 @@ CB2 = fun(Msg, Args) ->
 end.
 #Fun<erl_eval.12.54118792>
 
-% use ebus_process utility to spawn a handler
-H1 = ebus_process:spawn_handler(CB1).
+% use ebus_proc utility to spawn a handler
+H1 = ebus_proc:spawn_handler(CB1).
 <0.70.0>
-H2 = ebus_process:spawn_handler(CB2, ["any_ctx"]).
+H2 = ebus_proc:spawn_handler(CB2, ["any_ctx"]).
 <0.72.0>
 
 % subscribe handlers
@@ -250,9 +250,9 @@ ebus:dispatch("foo", #{payload => foo}).
 ok
 
 % check that only one subscriber received the message
-ebus_process:messages(self()).
+ebus_proc:messages(self()).
 [#{payload => foo}]
-ebus_process:messages(Pid).
+ebus_proc:messages(Pid).
 []
 
 % dispatch with options
@@ -262,9 +262,9 @@ ebus:dispatch("foo", <<"M1">>, [{scope, global}, {dispatch_fun, Fun}]).
 ok
 
 % check again
-ebus_process:messages(self()).                                         
+ebus_proc:messages(self()).                                         
 [#{payload => foo}]
-ebus_process:messages(Pid).                                            
+ebus_proc:messages(Pid).                                            
 [<<"M1">>]
 ```
 

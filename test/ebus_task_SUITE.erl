@@ -85,9 +85,9 @@ t_async1(_Config) ->
   Pid ! true,
 
   % Assert response and monitoring messages
-  done = ebus_process:wait_for_msg(5000),
-  {Ref, done} = ebus_process:wait_for_msg(5000),
-  {'DOWN', Ref, _, _, normal} = ebus_process:wait_for_msg(5000),
+  done = ebus_proc:wait_for_msg(5000),
+  {Ref, done} = ebus_proc:wait_for_msg(5000),
+  {'DOWN', Ref, _, _, normal} = ebus_proc:wait_for_msg(5000),
 
   ct:print("\e[1;1m async/1 \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -117,7 +117,7 @@ t_async2(_Config) ->
 
   % Assert response and monitoring messages
   done = ebus_task:await(Task),
-  done = ebus_process:wait_for_msg(5000),
+  done = ebus_proc:wait_for_msg(5000),
 
   ct:print("\e[1;1m async/2 \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -144,7 +144,7 @@ t_async3(_Config) ->
 
   % Assert response and monitoring messages
   done = ebus_task:await(Task),
-  done = ebus_process:wait_for_msg(5000),
+  done = ebus_proc:wait_for_msg(5000),
 
   ct:print("\e[1;1m async/3 \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -163,7 +163,7 @@ t_start1(_Config) ->
   {?MODULE, FunName, 0} = proc_lib:translate_initial_call(Pid),
 
   Pid ! true,
-  done = ebus_process:wait_for_msg(5000),
+  done = ebus_proc:wait_for_msg(5000),
 
   ct:print("\e[1;1m start/1 \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -182,7 +182,7 @@ t_start2(_Config) ->
   {?MODULE, FunName, 1} = proc_lib:translate_initial_call(Pid),
 
   Pid ! true,
-  done = ebus_process:wait_for_msg(5000),
+  done = ebus_proc:wait_for_msg(5000),
 
   ct:print("\e[1;1m start/2 \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -201,7 +201,7 @@ t_start3(_Config) ->
   Pid ! true,
 
   Pid ! true,
-  done = ebus_process:wait_for_msg(5000),
+  done = ebus_proc:wait_for_msg(5000),
 
   ct:print("\e[1;1m start/3 \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -220,7 +220,7 @@ t_start_link1(_Config) ->
   {?MODULE, FunName, 0} = proc_lib:translate_initial_call(Pid),
 
   Pid ! true,
-  done = ebus_process:wait_for_msg(5000),
+  done = ebus_proc:wait_for_msg(5000),
 
   ct:print("\e[1;1m start_link/1 \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -239,7 +239,7 @@ t_start_link2(_Config) ->
   {?MODULE, FunName, 1} = proc_lib:translate_initial_call(Pid),
 
   Pid ! true,
-  done = ebus_process:wait_for_msg(5000),
+  done = ebus_proc:wait_for_msg(5000),
 
   ct:print("\e[1;1m start_link/2 \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -258,7 +258,7 @@ t_start_link3(_Config) ->
   Pid ! true,
 
   Pid ! true,
-  done = ebus_process:wait_for_msg(5000),
+  done = ebus_proc:wait_for_msg(5000),
 
   ct:print("\e[1;1m start_link/3 \e[0m\e[32m[OK] \e[0m"),
   ok.

@@ -56,8 +56,8 @@ t_pubsub(Config) ->
   timer:sleep(1000),
 
   % check local process received message
-  <<"hello">> = ebus_process:wait_for_msg(5000),
-  [] = ebus_process:messages(self()),
+  <<"hello">> = ebus_proc:wait_for_msg(5000),
+  [] = ebus_proc:messages(self()),
 
   % check remote processes received message
   L1 = lists:duplicate(4, [<<"hello">>]),
@@ -68,7 +68,7 @@ t_pubsub(Config) ->
   timer:sleep(1000),
 
   % check local process didn't receive message
-  [] = ebus_process:messages(self()),
+  [] = ebus_proc:messages(self()),
 
   % check remote processes received message
   L2 = lists:duplicate(4, [<<"hello">>, <<"hello">>]),
@@ -88,8 +88,8 @@ t_pubsub(Config) ->
   timer:sleep(1000),
 
   % check
-  <<"hello">> = ebus_process:wait_for_msg(5000),
-  [] = ebus_process:messages(self()),
+  <<"hello">> = ebus_proc:wait_for_msg(5000),
+  [] = ebus_proc:messages(self()),
   L3 = [
     [<<"hello">>, <<"hello">>]
     | lists:duplicate(3, [<<"hello">>, <<"hello">>, <<"hello">>])
@@ -108,8 +108,8 @@ t_pubsub(Config) ->
   timer:sleep(1000),
 
   % check
-  <<"foo">> = ebus_process:wait_for_msg(5000),
-  [] = ebus_process:messages(self()),
+  <<"foo">> = ebus_proc:wait_for_msg(5000),
+  [] = ebus_proc:messages(self()),
   L3 = r_process_messages(NodePidL),
 
   % check topics
@@ -149,8 +149,8 @@ t_dispatch(Config) ->
   timer:sleep(1000),
 
   % check local process received message
-  <<"M1">> = ebus_process:wait_for_msg(5000),
-  [] = ebus_process:messages(self()),
+  <<"M1">> = ebus_proc:wait_for_msg(5000),
+  [] = ebus_proc:messages(self()),
 
   % check remote processes received message
   L1 = lists:duplicate(4, []),
@@ -171,7 +171,7 @@ t_dispatch(Config) ->
 
   % dispatch fun
   [S1 | _] = ebus:subscribers("foo"),
-  MsgsS1 = length(ebus_process:r_messages(S1)),
+  MsgsS1 = length(ebus_proc:r_messages(S1)),
   Fun = fun([H | _]) -> H end,
   lists:foreach(
     fun(_) ->
@@ -182,7 +182,7 @@ t_dispatch(Config) ->
   ),
   timer:sleep(1500),
   MsgsS11 = MsgsS1 + 100,
-  MsgsS11 = length(ebus_process:r_messages(S1)),
+  MsgsS11 = length(ebus_proc:r_messages(S1)),
 
   ct:print("\e[1;1m t_dispatch: \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -213,7 +213,7 @@ start_slaves([Node | T], Acc) ->
 
 spawn_remote_pids(RemoteNodes) ->
   {ResL, _} = rpc:multicall(
-    RemoteNodes, ebus_process, spawn_timer_fun, [infinity]
+    RemoteNodes, ebus_proc, spawn_timer_fun, [infinity]
   ),
   lists:zip(RemoteNodes, ResL).
 
@@ -232,4 +232,4 @@ unsub_remote_pids(RemotePids, Topic) ->
   ).
 
 r_process_messages(RemotePids) ->
-  [ebus_process:r_messages(Pid) || {_, Pid} <- RemotePids].
+  [ebus_proc:r_messages(Pid) || {_, Pid} <- RemotePids].

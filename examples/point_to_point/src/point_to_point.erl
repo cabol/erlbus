@@ -44,7 +44,7 @@ subscriber(Topic, N) ->
       [self(), Msg, Args]
     )
   end,
-  {Handler, _} = ebus_process:spawn_handler(Callback, [N], [monitor]),
+  {Handler, _} = ebus_proc:spawn_handler(Callback, [N], [monitor]),
   ebus:sub(Handler, Topic).
 
 teardown_ebus() -> ebus:stop().

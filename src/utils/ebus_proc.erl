@@ -3,7 +3,7 @@
 %%% Process utilities.
 %%% @end
 %%%-------------------------------------------------------------------
--module(ebus_process).
+-module(ebus_proc).
 
 %% API
 -export([wait_for_msg/0, wait_for_msg/1]).

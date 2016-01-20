@@ -57,19 +57,19 @@ t_subscribe(Config) ->
 
   % broadcast
   ok = ebus_ps_local:broadcast(PubSub, PoolSize, none, <<"foo">>, hellofoo),
-  hellofoo = ebus_process:wait_for_msg(5000),
-  [hellofoo] = ebus_process:messages(Pid),
+  hellofoo = ebus_proc:wait_for_msg(5000),
+  [hellofoo] = ebus_proc:messages(Pid),
 
   ok = ebus_ps_local:broadcast(PubSub, PoolSize, none, <<"bar">>, hellobar),
-  hellobar = ebus_process:wait_for_msg(5000),
-  [hellofoo] = ebus_process:messages(Pid),
+  hellobar = ebus_proc:wait_for_msg(5000),
+  [hellofoo] = ebus_proc:messages(Pid),
 
   ok = ebus_ps_local:broadcast(PubSub, PoolSize, none, <<"unknown">>, hellobar),
-  [] = ebus_process:messages(self()),
+  [] = ebus_proc:messages(self()),
 
   ok = ebus_ps_local:broadcast(PubSub, PoolSize, self(), <<"foo">>, hellofoo),
-  [hellofoo, hellofoo] = ebus_process:messages(Pid),
-  [] = ebus_process:messages(self()),
+  [hellofoo, hellofoo] = ebus_proc:messages(Pid),
+  [] = ebus_proc:messages(self()),
 
   ct:print("\e[1;1m t_subscribe: \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -91,8 +91,8 @@ t_unsubscribe(Config) ->
   [Pid] = ebus_ps_local:subscribers(PubSub, PoolSize, <<"topic1">>),
 
   ok = ebus_ps_local:broadcast(PubSub, PoolSize, none, <<"topic1">>, foo),
-  [] = ebus_process:messages(),
-  [foo] = ebus_process:messages(Pid),
+  [] = ebus_proc:messages(),
+  [foo] = ebus_proc:messages(Pid),
 
   ct:print("\e[1;1m t_unsubscribe: \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -127,7 +127,7 @@ t_pid_removed_when_down(Config) ->
   ok = ebus_ps_local:subscribe(PubSub, PoolSize, Pid, <<"topic6">>),
 
   exit(Pid, kill),
-  {'DOWN', Ref, _, _, _} = ebus_process:wait_for_msg(5000),
+  {'DOWN', Ref, _, _, _} = ebus_proc:wait_for_msg(5000),
 
   % Ensure DOWN is processed to avoid races
   ebus_ps_local:subscribe(PubSub, PoolSize, Pid, <<"unknown">>),

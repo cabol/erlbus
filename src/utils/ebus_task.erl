@@ -299,9 +299,50 @@ exit(_Info, _MFA, _LogReason, Reason)
     when Reason == normal orelse Reason == shutdown
     orelse (tuple_size(Reason) == 2 andalso element(1, Reason) == shutdown) ->
   exit(Reason);
-exit(_Info, _MFA, _LogReason, Reason) ->
-  % @TODO: build log message
+exit(Info, MFA, LogReason, Reason) ->
+  {Fun, Args} = get_running(MFA),
+  error_logger:format(
+    "** Task ~p terminating~n" ++
+    "** Started from ~p~n" ++
+    "** When function  == ~p~n" ++
+    "**      arguments == ~p~n" ++
+    "** Reason for termination == ~n" ++
+    "** ~p~n", [self(), get_from(Info), Fun, Args, get_reason(LogReason)]
+  ),
   exit(Reason).
+
+%% @private
+get_from({Node, PidOrName}) when Node == node() -> PidOrName;
+get_from(Other)                                 -> Other.
+
+%% @private
+get_running({erlang, apply, [Fun, Args]}) when is_function(Fun, length(Args)) ->
+  {Fun, Args};
+get_running({Mod, Fun, Args}) ->
+  {erlang:make_fun(Mod, Fun, length(Args)), Args}.
+
+%% @private
+get_reason({undef, [{Mod, Fun, Args, _Info} | _] = Stacktrace} = Reason)
+    when is_atom(Mod) and is_atom(Fun) ->
+  FunExported = fun
+    (M, F, A) when is_list(A) ->
+      erlang:function_exported(M, F, length(A));
+    (M, F, A) when is_integer(A) ->
+      erlang:function_exported(M, F, A)
+  end,
+  case code:is_loaded(Mod) of
+    false ->
+      {module_could_not_be_loaded, Stacktrace};
+    _ when is_list(Args); is_integer(Args) ->
+      case FunExported(Mod, Fun, Args) of
+        false -> {function_not_exported, Stacktrace};
+        _     -> Reason
+      end;
+    _ ->
+      Reason
+  end;
+get_reason(Reason) ->
+  Reason.
 
 %% @private
 reason(noconnection, Proc) -> {nodedown, monitor_node(Proc)};

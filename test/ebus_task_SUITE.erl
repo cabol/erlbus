@@ -21,6 +21,7 @@
   t_await_task_error/1,
   t_await_undef_module_error/1,
   t_await_undef_fun_error/1,
+  t_await_undef_mfa_error/1,
   t_await_task_exit/1,
   t_await_noconnection/1,
   t_await_noconnection_from_named_monitor/1,
@@ -41,6 +42,7 @@ all() -> [
   t_await_task_error,
   t_await_undef_module_error,
   t_await_undef_fun_error,
+  t_await_undef_mfa_error,
   t_await_task_exit,
   t_await_noconnection,
   t_await_noconnection_from_named_monitor,
@@ -337,6 +339,20 @@ t_await_undef_fun_error(_Config) ->
   end,
 
   ct:print("\e[1;1m await/2 exits on task undef function error \e[0m\e[32m[OK] \e[0m"),
+  ok.
+
+t_await_undef_mfa_error(_Config) ->
+  process_flag(trap_exit, true),
+  Task = ebus_task:async(?MODULE, undef, []),
+
+  try ebus_task:await(Task)
+  catch
+    exit:Ex ->
+      {{undef, [{?MODULE, undef, _, _} | _]},
+        {ebus_task, await, [Task, 5000]}} = Ex
+  end,
+
+  ct:print("\e[1;1m await/2 exits on task undef MFA error \e[0m\e[32m[OK] \e[0m"),
   ok.
 
 t_await_task_exit(_Config) ->

@@ -1,0 +1,1 @@
+%{"phoenix_pubsub": {:git, "https://github.com/phoenixframework/phoenix_pubsub.git", "bf762cf0fbd823d135889ac262b5aaacf0463b58", [branch: "master"]}}

@@ -1,1 +1,4 @@
-[].
+[{<<"elixir">>,
+  {git,"https://github.com/elixir-lang/elixir.git",
+       {ref,"a3d88dc406ca9642bcabf375db7f74f2cc6a751d"}},
+  0}].

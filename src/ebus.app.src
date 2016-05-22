@@ -1,12 +1,10 @@
-{application, ebus,
- [
+{application, ebus, [
   {description, "Erlang Message Event Bus"},
-  {vsn, "1.0.0"},
+  {vsn, "0.2.0"},
   {id, "git"},
   {modules, []},
   {registered, []},
   {applications, [kernel, stdlib]},
   {mod, {ebus, []}},
   {env, []}
- ]
-}.
+]}.

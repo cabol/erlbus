@@ -1,10 +1,19 @@
 {application, ebus, [
-  {description, "Erlang Message Event Bus"},
+  {description, "ErlBus: Erlang Message Event Bus"},
   {vsn, "0.2.0"},
-  {id, "git"},
+  {id, "ebus"},
   {modules, []},
   {registered, []},
   {applications, [kernel, stdlib]},
   {mod, {ebus, []}},
-  {env, []}
+  {env, []},
+  {maintainers, ["Carlos Andres Bolanos"]},
+  {licenses, ["MIT"]},
+  {build_tools, ["rebar3", "make"]},
+  {pkg_name, "erlbus"},
+  {links, [
+    {"GitHub", "https://github.com/cabol/erlbus"},
+    {"Doc", "http://cabol.github.io/erlbus"},
+    {"Blog Post", "http://cabol.github.io/posts/2016/01/13/distributed-scalable-pubsub-in-erlang.html"}
+  ]}
 ]}.

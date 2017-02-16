@@ -1,10 +1,13 @@
 {application, ebus, [
-  {description, "ErlBus: Erlang Message Event Bus"},
-  {vsn, "0.2.0"},
+  {description, "Erlang Message Event Bus"},
+  {vsn, "0.2.1"},
   {id, "ebus"},
   {modules, []},
   {registered, []},
-  {applications, [kernel, stdlib]},
+  {applications, [
+    kernel,
+    stdlib
+  ]},
   {mod, {ebus, []}},
   {env, []},
   {maintainers, ["Carlos Andres Bolanos"]},

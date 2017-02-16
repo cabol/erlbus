@@ -20,11 +20,12 @@ all() -> [t_pubsub, t_dispatch].
 
 init_per_suite(Config) ->
   ebus:start(),
-  Nodes = start_slaves(),
+  Nodes = start_slaves([a, b, c, d]),
   [{nodes, Nodes} | Config].
 
 end_per_suite(Config) ->
   ebus:stop(),
+  stop_slaves([a, b, c, d]),
   Config.
 
 %%%===================================================================
@@ -157,10 +158,9 @@ t_dispatch(Config) ->
   L1 = r_process_messages(NodePidL),
 
   % dispatch global with default dispatch_fun
-  lists:foreach(
-    fun(_) -> ok = ebus:dispatch("foo", <<"M2">>, [{scope, global}]) end,
-    lists:seq(1, 500)
-  ),
+  lists:foreach(fun(_) ->
+    ok = ebus:dispatch("foo", <<"M2">>, [{scope, global}])
+  end, lists:seq(1, 500)),
   timer:sleep(1500),
 
   % check remote processes received message
@@ -173,13 +173,11 @@ t_dispatch(Config) ->
   [S1 | _] = ebus:subscribers("foo"),
   MsgsS1 = length(ebus_proc:r_messages(S1)),
   Fun = fun([H | _]) -> H end,
-  lists:foreach(
-    fun(_) ->
-      ok = ebus:dispatch(
-        "foo", <<"M3">>, [{scope, global}, {dispatch_fun, Fun}]
-      )
-    end, lists:seq(1, 100)
-  ),
+  lists:foreach(fun(_) ->
+    ok = ebus:dispatch(
+      "foo", <<"M3">>,
+      [{scope, global}, {dispatch_fun, Fun}])
+  end, lists:seq(1, 100)),
   timer:sleep(1500),
   MsgsS11 = MsgsS1 + 100,
   MsgsS11 = length(ebus_proc:r_messages(S1)),
@@ -191,14 +189,13 @@ t_dispatch(Config) ->
 %% Internal functions
 %%==============================================================================
 
-start_slaves() ->
-  Nodes = [a, b, c, d],
-  start_slaves(Nodes, []).
+start_slaves(Slaves) ->
+  start_slaves(Slaves, []).
 
-start_slaves([], Acc) -> Acc;
+start_slaves([], Acc) ->
+  lists:usort(Acc);
 start_slaves([Node | T], Acc) ->
-  ErlFlags = "-pa ../../_build/default/lib/*/ebin " ++
-    "-config ../../test/test.config",
+  ErlFlags = "-pa ../../lib/*/ebin -config ../../../../test/test.config",
   {ok, HostNode} = ct_slave:start(Node, [
     {kill_if_fail, true},
     {monitor_master, true},
@@ -207,9 +204,20 @@ start_slaves([Node | T], Acc) ->
     {startup_functions, [{ebus, start, []}]},
     {erl_flags, ErlFlags}
   ]),
-  ct:print("\e[32m ---> Node ~p [OK] \e[0m", [HostNode]),
+  ct:print("\e[36m ---> Node ~p \e[32m[OK] \e[0m", [HostNode]),
   pong = net_adm:ping(HostNode),
   start_slaves(T, [HostNode | Acc]).
+
+stop_slaves(Slaves) ->
+  stop_slaves(Slaves, []).
+
+stop_slaves([], Acc) ->
+  lists:usort(Acc);
+stop_slaves([Node | T], Acc) ->
+  {ok, Name} = ct_slave:stop(Node),
+  ct:print("\e[36m ---> Node ~p \e[31m[STOPPED] \e[0m", [Name]),
+  pang = net_adm:ping(Node),
+  stop_slaves(T, [Node | Acc]).
 
 spawn_remote_pids(RemoteNodes) ->
   {ResL, _} = rpc:multicall(
@@ -218,18 +226,14 @@ spawn_remote_pids(RemoteNodes) ->
   lists:zip(RemoteNodes, ResL).
 
 sub_remote_pids(RemotePids, Topic) ->
-  lists:foreach(
-    fun({Node, Pid}) ->
-      ok = rpc:call(Node, ebus, sub, [Pid, Topic])
-    end, RemotePids
-  ).
+  lists:foreach(fun({Node, Pid}) ->
+    ok = rpc:call(Node, ebus, sub, [Pid, Topic])
+  end, RemotePids).
 
 unsub_remote_pids(RemotePids, Topic) ->
-  lists:foreach(
-    fun({Node, Pid}) ->
-      ok = rpc:call(Node, ebus, unsub, [Pid, Topic])
-    end, RemotePids
-  ).
+  lists:foreach(fun({Node, Pid}) ->
+    ok = rpc:call(Node, ebus, unsub, [Pid, Topic])
+  end, RemotePids).
 
 r_process_messages(RemotePids) ->
   [ebus_proc:r_messages(Pid) || {_, Pid} <- RemotePids].

@@ -26,6 +26,7 @@
 all() -> [t_handler, t_callback_handler].
 
 init_per_suite(Config) ->
+  ebus:stop(),
   ebus:start(),
   Config.
 

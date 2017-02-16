@@ -1,47 +1,60 @@
-REBAR = $(shell which rebar3 || echo ./rebar3)
+REBAR = $(shell which rebar3)
 
-ifdef REBAR_PROFILE
-PROFILE = $(REBAR_PROFILE)
+EPMD_PROC_NUM = $(shell ps -ef | grep epmd | grep -v "grep")
+
+.PHONY: all check_rebar compile clean distclean dialyzer tests shell edoc
+
+all: check_rebar compile
+
+check_rebar:
+ifeq ($(REBAR),)
+ifeq ($(wildcard rebar3),)
+	curl -O https://s3.amazonaws.com/rebar3/rebar3
+	chmod a+x rebar3
+	./rebar3 update
+	$(eval REBAR=./rebar3)
 else
-PROFILE = default
+	$(eval REBAR=./rebar3)
+endif
 endif
 
-BUILD_PATH = ./_build/$(PROFILE)/lib/*/ebin
-
-CONFIG ?= test/test.config
-
-CT_OPTS = -cover test/cover.spec -erl_args -config ${CONFIG}
-CT_SUITES = ebus_task_SUITE \
-            ebus_ps_local_SUITE \
-            ebus_ps_SUITE \
-            ebus_handler_SUITE \
-            ebus_dist_SUITE
-
-.PHONY: all compile clean distclean dialyze tests shell doc
-
-all: compile
-
-compile:
+compile: check_rebar
 	$(REBAR) compile
 
-clean:
+clean: check_rebar
 	rm -rf ebin/* test/*.beam logs log
 	$(REBAR) clean
 
 distclean: clean
 	$(REBAR) clean --all
-	rm -rf _build logs log doc
+	rm -rf _build logs log doc *.dump *_plt *.crashdump priv
 
-dialyze:
+dialyzer: check_rebar
 	$(REBAR) dialyzer
 
-tests: compile
-	mkdir -p logs
-	ct_run -dir test -suite $(CT_SUITES) -pa $(BUILD_PATH) -logdir logs $(CT_OPTS)
+check_epmd:
+ifeq ($(EPMD_PROC_NUM),)
+	epmd&
+	@echo " ---> Started epmd!"
+endif
+
+test: check_rebar check_epmd
+	$(REBAR) ct --name ct@127.0.0.1
+	$(REBAR) cover
 	rm -rf test/*.beam
 
-shell: compile
-	erl -pa $(BUILD_PATH) -s ebus -config ${CONFIG}
+local_test: check_rebar check_epmd
+	$(REBAR) ct --suite=test/ebus_task_SUITE,test/ebus_ps_SUITE,test/ebus_ps_local_SUITE,test/ebus_handler_SUITE
+	$(REBAR) cover
+	rm -rf test/*.beam
 
-doc:
+dist_test: check_rebar check_epmd
+	$(REBAR) ct --name ct@127.0.0.1 --suite=test/ebus_dist_SUITE
+	$(REBAR) cover
+	rm -rf test/*.beam
+
+shell: check_rebar
+	$(REBAR) shell
+
+edoc: check_rebar
 	$(REBAR) edoc

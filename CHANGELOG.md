@@ -1,6 +1,17 @@
 # Change Log
 
-## [0.2.0](https://github.com/cabol/erlbus/tree/0.2.0) (2016-05-21)
+## [v0.2.1](https://github.com/cabol/erlbus/tree/v0.2.1) (2017-02-15)
+[Full Changelog](https://github.com/cabol/erlbus/compare/0.2.0...v0.2.1)
+
+**Closed issues:**
+
+- Fix tests to use rebar3 directly instead of call ct\_run [\#38](https://github.com/cabol/erlbus/issues/38)
+
+**Merged pull requests:**
+
+- \[\#38\] – Fix tests to use rebar3 directly instead of call ct\_run [\#39](https://github.com/cabol/erlbus/pull/39) ([cabol](https://github.com/cabol))
+
+## [0.2.0](https://github.com/cabol/erlbus/tree/0.2.0) (2016-05-22)
 [Full Changelog](https://github.com/cabol/erlbus/compare/0.1.0...0.2.0)
 
 **Fixed bugs:**

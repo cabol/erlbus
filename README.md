@@ -1,6 +1,6 @@
 <img src="http://assets.nydailynews.com/polopoly_fs/1.1096240.1339765703!/img/httpImage/image.jpg_gen/derivatives/article_970/trains15n-1-web.jpg" height="200" width="100%" />
 
-# ErlBus
+# ErlBus [![Build Status](https://travis-ci.org/cabol/erlbus.svg?branch=master)](https://travis-ci.org/cabol/erlbus)
 
 Message / Event Bus written in Erlang.
 

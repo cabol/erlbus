@@ -295,6 +295,7 @@ get_initial_call({Mod, Fun, Args}) ->
   {Mod, Fun, length(Args)}.
 
 %% @private
+-spec exit(proc_info(), callback(), term(), term()) -> no_return().
 exit(_Info, _MFA, _LogReason, Reason)
     when Reason == normal orelse Reason == shutdown
     orelse (tuple_size(Reason) == 2 andalso element(1, Reason) == shutdown) ->

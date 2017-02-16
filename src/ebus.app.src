@@ -4,10 +4,7 @@
   {id, "ebus"},
   {modules, []},
   {registered, []},
-  {applications, [
-    kernel,
-    stdlib
-  ]},
+  {applications, [kernel, stdlib]},
   {mod, {ebus, []}},
   {env, []},
   {maintainers, ["Carlos Andres Bolanos"]},

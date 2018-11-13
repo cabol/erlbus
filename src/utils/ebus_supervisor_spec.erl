@@ -59,9 +59,7 @@ supervisor(Module, Args) ->
 %% }
 %% '''
 %% @end
--spec supervisor(
-  module(), [term()], supervisor:child_spec()
-) -> supervisor:child_spec().
+-spec supervisor(module(), [term()], map()) -> supervisor:child_spec().
 supervisor(Module, Args, Spec) when is_map(Spec) ->
   child(supervisor, Module, Args, Spec#{shutdown => infinity});
 supervisor(_, _, _) -> throw(invalid_child_spec).
@@ -93,9 +91,7 @@ worker(Module, Args) ->
 %% }
 %% '''
 %% @end
--spec worker(
-  module(), [term()], supervisor:child_spec()
-) -> supervisor:child_spec().
+-spec worker(module(), [term()], map()) -> supervisor:child_spec().
 worker(Module, Args, Spec) when is_map(Spec) ->
   child(worker, Module, Args, Spec);
 worker(_, _, _) -> throw(invalid_child_spec).

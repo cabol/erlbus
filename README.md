@@ -1,4 +1,4 @@
-<img src="http://assets.nydailynews.com/polopoly_fs/1.1096240.1339765703!/img/httpImage/image.jpg_gen/derivatives/article_970/trains15n-1-web.jpg" height="200" width="100%" />
+<img src="https://ak3.picdn.net/shutterstock/videos/25151363/thumb/1.jpg" height="200" width="100%" />
 
 # ErlBus [![Build Status](https://travis-ci.org/cabol/erlbus.svg?branch=master)](https://travis-ci.org/cabol/erlbus)
 
@@ -60,11 +60,11 @@ ebus:pub("foo", {foo, "hi"}).
 ok
 
 % check received message for Pid
-ebus_proc:messages(Pid).             
+ebus_proc:messages(Pid).
 [{foo,"hi"}]
 
 % check received message for self
-ebus_proc:messages(self()).             
+ebus_proc:messages(self()).
 [{foo,"hi"}]
 
 % unsubscribe self
@@ -76,11 +76,11 @@ ebus:pub("foo", {foo, "hello"}).
 ok
 
 % check received message for Pid
-ebus_proc:messages(Pid).             
+ebus_proc:messages(Pid).
 [{foo,"hi"},{foo,"hello"}]
 
 % check received message for self (last message didn't arrive)
-ebus_proc:messages(self()).             
+ebus_proc:messages(self()).
 [{foo,"hi"}]
 
 % check subscribers (only Pid should be in the returned list)
@@ -104,11 +104,11 @@ ebus:pub("bar", {bar, "hi bar"}).
 ok
 
 % check received message for Pid (last message didn't arrive)
-ebus_proc:messages(Pid).             
+ebus_proc:messages(Pid).
 [{foo,"hi"},{foo,"hello"}]
 
 % check received message for self
-ebus_proc:messages(self()).             
+ebus_proc:messages(self()).
 [{foo,"hi"},{bar,"hi bar"}]
 ```
 
@@ -264,9 +264,9 @@ ebus:dispatch("foo", <<"M1">>, [{scope, global}, {dispatch_fun, Fun}]).
 ok
 
 % check again
-ebus_proc:messages(self()).                                         
+ebus_proc:messages(self()).
 [#{payload => foo}]
-ebus_proc:messages(Pid).                                            
+ebus_proc:messages(Pid).
 [<<"M1">>]
 ```
 
@@ -291,7 +291,7 @@ See [examples](./examples).
 
 ## Running Tests
 
-    $ make tests
+    $ make test
 
 
 ## Building Edoc

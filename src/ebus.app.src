@@ -13,7 +13,6 @@
   {pkg_name, "erlbus"},
   {links, [
     {"GitHub", "https://github.com/cabol/erlbus"},
-    {"Doc", "http://cabol.github.io/erlbus"},
     {"Blog Post", "http://cabol.github.io/posts/2016/01/13/distributed-scalable-pubsub-in-erlang.html"}
   ]}
 ]}.

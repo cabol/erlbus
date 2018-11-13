@@ -195,7 +195,7 @@ start_slaves(Slaves) ->
 start_slaves([], Acc) ->
   lists:usort(Acc);
 start_slaves([Node | T], Acc) ->
-  ErlFlags = "-pa ../../lib/*/ebin -config ../../../../test/test.config",
+  ErlFlags = "-pa ../../lib/*/ebin -config ../../../../config/test.config",
   {ok, HostNode} = ct_slave:start(Node, [
     {kill_if_fail, true},
     {monitor_master, true},

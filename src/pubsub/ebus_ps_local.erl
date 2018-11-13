@@ -172,12 +172,12 @@ broadcast(Server, 1, From, Topic, Msg) when is_atom(Server) ->
 broadcast(Server, PoolSize, From, Topic, Msg) when is_atom(Server) ->
   Parent = self(),
   Tasks = [begin
-    ebus_task:async(fun() ->
+    shards_task:async(fun() ->
       do_broadcast(Server, Shard, From, Topic, Msg),
       unlink(Parent)
     end)
   end || Shard <- lists:seq(0, PoolSize - 1)],
-  lists:foreach(fun(Task) -> ebus_task:await(Task) end, Tasks).
+  lists:foreach(fun(Task) -> shards_task:await(Task) end, Tasks).
 
 %% @private
 do_broadcast(Server, Shard, From, Topic,

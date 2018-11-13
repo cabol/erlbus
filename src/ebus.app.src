@@ -1,6 +1,6 @@
 {application, ebus, [
-  {description, "Erlang Message Event Bus"},
-  {vsn, "0.2.1"},
+  {description, "Simple, Distributed and Scalable PubSub Message Bus written in Erlang"},
+  {vsn, "0.2.2"},
   {id, "ebus"},
   {modules, []},
   {registered, []},

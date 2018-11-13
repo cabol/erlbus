@@ -1,6 +1,14 @@
 # Change Log
 
-## [v0.2.1](https://github.com/cabol/erlbus/tree/v0.2.1) (2017-02-15)
+## [v0.2.2](https://github.com/cabol/erlbus/tree/v0.2.2) (2018-11-13)
+[Full Changelog](https://github.com/cabol/erlbus/compare/v0.2.1...v0.2.2)
+
+**Closed issues:**
+
+- erlang:get\_stacktrace\(\) stop working on v21 [\#40](https://github.com/cabol/erlbus/issues/40)
+- Please publish to hex.pm [\#37](https://github.com/cabol/erlbus/issues/37)
+
+## [v0.2.1](https://github.com/cabol/erlbus/tree/v0.2.1) (2017-02-16)
 [Full Changelog](https://github.com/cabol/erlbus/compare/0.2.0...v0.2.1)
 
 **Closed issues:**

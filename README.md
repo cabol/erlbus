@@ -25,7 +25,32 @@ which provides an amazing, scalable and proven PubSub solution. In addition to t
 You can read more about the PubSub implementation [HERE](https://hexdocs.pm/phoenix/Phoenix.PubSub.html).
 
 
-## Building ErlBus
+## Installation
+
+### Erlang
+
+In your `rebar.config`:
+
+```erlang
+{deps, [
+  {ebus, "0.2.2", {pkg, erlbus}}
+]}.
+```
+
+### Elixir
+
+In your `mix.exs`:
+
+```elixir
+def deps do
+  [
+    {:ebus, "~> 0.2", hex: :erlbus}
+  ]
+end
+```
+
+
+## Getting Started
 
 Assuming you have a working Erlang installation (18 or later), building **ErlBus** should be as simple as:
 

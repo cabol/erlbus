@@ -9,7 +9,7 @@ but re-written in Erlang.
 
 A new way to build soft real-time and high scalable messaging-based applications, not centralized but distributed!
 
-Documentation can be found [HERE](http://cabol.github.io/erlbus).
+Documentation can be found [HERE](https://hexdocs.pm/erlbus).
 
 See also: [WEST](https://github.com/cabol/west).
 

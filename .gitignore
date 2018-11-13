@@ -31,3 +31,5 @@ edoc
 priv/*.so
 *.crashdump
 *_plt
+/doc
+/docs

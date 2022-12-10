@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [v0.3.0](https://github.com/cabol/erlbus/tree/v0.3.0) (2022-12-10)
+
+[Full Changelog](https://github.com/cabol/erlbus/compare/v0.2.2...v0.3.0)
+
+**Closed issues:**
+
+- Compatibility with OTP 24
+  [#41](https://github.com/cabol/erlbus/issues/41)
+- Compatibility with OTP 25
+  [#42](https://github.com/cabol/erlbus/issues/42)
+
+**Implemented enhancements:**
+
+- Overall fixes, updates, and improvements.
+
 ## [v0.2.2](https://github.com/cabol/erlbus/tree/v0.2.2) (2018-11-13)
 
 [Full Changelog](https://github.com/cabol/erlbus/compare/v0.2.1...v0.2.2)

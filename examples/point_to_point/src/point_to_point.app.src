@@ -2,7 +2,7 @@
 
 {application, point_to_point,
  [
-  {description, "ErlBus Point-To-Point example."},
+  {description, "Erlbus Point-To-Point example."},
   {vsn, "1"},
   {modules, []},
   {registered, []},

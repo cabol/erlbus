@@ -8,15 +8,6 @@
 %%% Type definitions
 %%%===================================================================
 
-%% @type message() =
-%% #{
-%%   topic   => binary() | nil,
-%%   event   => binary() | nil,
-%%   payload => term(),
-%%   ref     => binary() | nil,
-%%   ebus_t  => message
-%% }.
-%%
 %% Defines a message dispatched over transport to channels and vice-versa.
 %% The message format requires the following keys:
 %% <ul>
@@ -26,7 +17,7 @@
 %% <li>`payload': The message payload.</li>
 %% <li>`ref': The unique binary ref.</li>
 %% </ul>
--type message() :: #{
+-type t() :: #{
   topic   => binary() | nil,
   event   => binary() | nil,
   payload => term(),
@@ -34,7 +25,7 @@
   ebus_t  => message
 }.
 
--export_type([message/0]).
+-export_type([t/0]).
 
 %%%===================================================================
 %%% API
@@ -56,7 +47,7 @@ new(Topic, Event) ->
 new(Topic, Event, Payload) ->
   new(Topic, Event, Payload, nil).
 
--spec new(binary() | nil, binary() | nil, term(), binary() | nil) -> message().
+-spec new(binary() | nil, binary() | nil, term(), binary() | nil) -> t().
 new(Topic, Event, Payload, Ref)
     when (is_binary(Topic) orelse Topic =:= nil)
     andalso (is_binary(Event) orelse Event =:= nil) ->
@@ -68,7 +59,7 @@ new(Topic, Event, Payload, Ref)
     ebus_t  => message
   }.
 
--spec from_map(map()) -> message().
+-spec from_map(map()) -> t().
 from_map(Map) ->
   BinKey = fun(K, V, Acc) -> Acc#{ebus_common:to_bin(K) => V} end,
   BinMap = maps:fold(BinKey, #{}, Map),

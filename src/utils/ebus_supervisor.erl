@@ -17,19 +17,9 @@
 %%% Types
 %%%===================================================================
 
-%% @type name() = atom() | {global, term()} | {via, module(), term()}.
-%%
 %% The Supervisor name.
 -type name() :: atom() | {global, term()} | {via, module(), term()}.
 
-%% @type options() =
-%% #{
-%%   name      => name(),
-%%   strategy  => supervisor:strategy(),
-%%   intensity => non_neg_integer(),
-%%   period    => pos_integer()
-%% }.
-%%
 %% Options used by the `start*' functions.
 -type options() :: #{
   name      => name(),

@@ -42,11 +42,6 @@
 %%% Types
 %%%===================================================================
 
-%% @type fastlane() =
-%% {FastlanePid :: pid(),
-%%  Serializer :: module(),
-%%  EventIntercepts :: [term()]}.
-%%
 %% Fastlane definition.
 -type fastlane() :: {
   FastlanePid     :: pid(),
@@ -54,12 +49,9 @@
   EventIntercepts :: [term()]
 }.
 
-%% @type option() = {link, any()} | {fastlane, fastlane()}.
-%%
 %% `subscribe/5' function options.
 -type option()  :: {link, _} | {fastlane, fastlane()}.
 
-%% @type options() = [option()].
 -type options() :: [option()].
 
 -export_type([fastlane/0, option/0, options/0]).
@@ -75,7 +67,7 @@
 %% <li>`ServerName': The name to register the server under.</li>
 %% </ul>
 %% @end
--spec start_link(atom(), atom()) -> gen:start_ret().
+-spec start_link(atom(), atom()) -> gen_server:start_ret().
 start_link(ServerName, GCName) ->
   gen_server:start_link({local, ServerName}, ?MODULE, [ServerName, GCName], []).
 
@@ -170,14 +162,9 @@ broadcast(Server, 1, From, Topic, Msg) when is_atom(Server) ->
   do_broadcast(Server, 0, From, Topic, Msg),
   ok;
 broadcast(Server, PoolSize, From, Topic, Msg) when is_atom(Server) ->
-  Parent = self(),
-  Tasks = [begin
-    shards_task:async(fun() ->
-      do_broadcast(Server, Shard, From, Topic, Msg),
-      unlink(Parent)
-    end)
-  end || Shard <- lists:seq(0, PoolSize - 1)],
-  lists:foreach(fun(Task) -> shards_task:await(Task) end, Tasks).
+  lists:foreach(fun(Shard) ->
+    do_broadcast(Server, Shard, From, Topic, Msg)
+  end, lists:seq(0, PoolSize - 1)).
 
 %% @private
 do_broadcast(Server, Shard, From, Topic,
@@ -263,8 +250,7 @@ subscribers_with_fastlanes(Server, Topic, Shard) when is_atom(Server) ->
 %% @doc
 %% Returns the topic list for all local shards.
 %%
-%% <p><font color="red">This is an expensive and private operation.
-%% <b> DO NOT USE IT IN PROD</b></font></p>
+%% <p>This is an expensive operation. <b> DO NOT USE IT IN PROD</b></p>
 %% @end
 -spec list(atom(), pos_integer()) -> [binary()].
 list(Server, PoolSize) ->
@@ -275,8 +261,7 @@ list(Server, PoolSize) ->
 %% @doc
 %% Returns the topic list for the given shard.
 %%
-%% <p><font color="red">This is an expensive and private operation.
-%% <b> DO NOT USE IT IN PROD</b></font></p>
+%% <p>This is an expensive operation. <b> DO NOT USE IT IN PROD</b></p>
 %% @end
 -spec list_by_shard(atom(), non_neg_integer()) -> [binary()].
 list_by_shard(Server, Shard) when is_atom(Server) ->
@@ -288,8 +273,7 @@ list_by_shard(Server, Shard) when is_atom(Server) ->
 %% @doc
 %% Returns a list of topics which `Pid' is subscribed.
 %%
-%% <p><font color="red">This is an expensive and private operation.
-%% <b> DO NOT USE IT IN PROD</b></font></p>
+%% <p>This is an expensive operation. <b> DO NOT USE IT IN PROD</b></p>
 %% @end
 -spec subscription(atom(), non_neg_integer(), pid()) -> [binary()].
 subscription(Server, PoolSize, Pid) when is_atom(Server) ->
@@ -371,8 +355,8 @@ local_for_shard(Shard, Server) ->
 
 %% @private
 pools_for_shard(Shard, Server) ->
-  [{Shard, {_, _} = Servers}] = ets:lookup(Server, Shard),
-  Servers.
+  [{Shard, ShardServer, GCServer}] = ets:lookup(Server, Shard),
+  {ShardServer, GCServer}.
 
 %% @private
 pid_to_shard(Pid, ShardSize) ->

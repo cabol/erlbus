@@ -40,7 +40,7 @@
 %% <li>`LocalName': The name of the local table.</li>
 %% </ul>
 %% @end
--spec start_link(atom(), atom()) -> gen:start_ret().
+-spec start_link(atom(), atom()) -> gen_server:start_ret().
 start_link(ServerName, LocalName) ->
   gen_server:start_link(
     {local, ServerName}, ?MODULE, [ServerName, LocalName], []

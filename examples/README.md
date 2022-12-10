@@ -1,5 +1,5 @@
 
-ErlBus Examples
+Erlbus Examples
 ===============
 
  *  [pubsub](./pubsub):

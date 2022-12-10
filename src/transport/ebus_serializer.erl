@@ -9,11 +9,11 @@
 %%%-------------------------------------------------------------------
 -module(ebus_serializer).
 
-%% Translates a `ebus_broadcast:broadcast()' to fastlane format
--callback fastlane(ebus_broadcast:broadcast()) -> term().
+%% Translates a `ebus_broadcast:t()' to fastlane format
+-callback fastlane(ebus_broadcast:t()) -> term().
 
-%% Encodes `ebus_broadcast:message()' to transport representation
--callback encode(ebus_broadcast:message() | ebus_broadcast:reply()) -> term().
+%% Encodes `ebus_broadcast:t()' to transport representation
+-callback encode(ebus_message:t() | ebus_reply:t()) -> term().
 
-%% Decodes data into `ebus_broadcast:message()' spec
--callback decode(binary(), [{atom(), term()}]) -> ebus_broadcast:message().
+%% Decodes data into `ebus_broadcast:t()' spec
+-callback decode(binary(), [{atom(), term()}]) -> ebus_message:t().

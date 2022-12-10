@@ -21,7 +21,7 @@ wait_for_msg() ->
   wait_for_msg(infinity).
 
 %% @doc
-%%
+%% Waits the given `Timeout' for a message.
 %% @end
 -spec wait_for_msg(timeout()) -> term() | {error, timeout}.
 wait_for_msg(Timeout) ->
@@ -31,7 +31,7 @@ wait_for_msg(Timeout) ->
     Timeout -> {error, timeout}
   end.
 
-%% @equiv process_messages(self())
+%% @equiv messages(self())
 messages() ->
   messages(self()).
 
@@ -44,8 +44,8 @@ messages(Pid) ->
   Messages.
 
 %% @doc
-%% Returns all queued messages for the process `Pid', but doesn't
-%% matter if process is local or remote.
+%% Returns all queued messages for the process `Pid',
+%% regardless if process is local or remote.
 %% @end
 -spec r_messages(pid()) -> [term()].
 r_messages(Pid) ->

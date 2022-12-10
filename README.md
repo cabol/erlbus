@@ -1,29 +1,31 @@
-<img src="https://ak3.picdn.net/shutterstock/videos/25151363/thumb/1.jpg" height="200" width="100%" />
+# Erlbus
+> Message/Event Bus written in Erlang.
 
-# ErlBus [![Build Status](https://travis-ci.org/cabol/erlbus.svg?branch=master)](https://travis-ci.org/cabol/erlbus)
+![CI](https://github.com/cabol/erlbus/workflows/CI/badge.svg)
 
-Message / Event Bus written in Erlang.
-
-The PubSub core is a clone of the original, remarkable, and proven [Phoenix PubSub Layer](https://hexdocs.pm/phoenix/Phoenix.PubSub.html),
+The PubSub core is a clone of the original, remarkable, and proven
+[Phoenix PubSub Layer][phx_pubsub],
 but re-written in Erlang.
 
-A new way to build soft real-time and high scalable messaging-based applications, not centralized but distributed!
+A new way to build soft real-time and high scalable messaging-based
+applications, not centralized but distributed!
 
-Documentation can be found [HERE](https://hexdocs.pm/erlbus).
+See the **[online documentation](https://hexdocs.pm/erlbus/)**.
 
-See also: [WEST](https://github.com/cabol/west).
-
+[phx_pubsub]: https://hexdocs.pm/phoenix/Phoenix.PubSub.html
+[phx_framework]: http://www.phoenixframework.org/
 
 ## Introduction
 
-**ErlBus** is a simple and lightweight library/tool to build messaging-based applications.
+**Erlbus** is a simple and lightweight library/tool to build messaging-based
+applications.
 
-**ErlBus** PubSub implementation was taken from [Phoenix Framework](http://www.phoenixframework.org/),
-which provides an amazing, scalable and proven PubSub solution. In addition to this,
-**ErlBus** provides an usable and simpler interface on top of this implementation.
+**Erlbus** PubSub implementation was taken from [Phoenix Framework][phx_framework],
+which provides an amazing, scalable and proven PubSub solution. In addition to
+this, **Erlbus** provides an usable and simpler interface on top of this
+implementation.
 
-You can read more about the PubSub implementation [HERE](https://hexdocs.pm/phoenix/Phoenix.PubSub.html).
-
+You can read more about the PubSub implementation [HERE][phx_pubsub].
 
 ## Installation
 
@@ -33,7 +35,7 @@ In your `rebar.config`:
 
 ```erlang
 {deps, [
-  {ebus, "0.2.2", {pkg, erlbus}}
+  {ebus, "0.3.0", {pkg, erlbus}}
 ]}.
 ```
 
@@ -44,26 +46,29 @@ In your `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ebus, "~> 0.2", hex: :erlbus}
+    {:ebus, "~> 0.3", hex: :erlbus}
   ]
 end
 ```
 
-
 ## Getting Started
 
-Assuming you have a working Erlang installation (18 or later), building **ErlBus** should be as simple as:
+Assuming you have a working Erlang installation (18 or later), building `erlbus`
+should be as simple as:
 
-    $ git clone https://github.com/cabol/erlbus.git
-    $ cd erlbus
-    $ make
-
+```
+$ git clone https://github.com/cabol/erlbus.git
+$ cd erlbus
+$ make
+```
 
 ## Quick Start Example
 
-Start an Erlang console with `ebus` running:
+Start an Erlang console with `erlbus` running:
 
-    $ make shell
+```
+make shell
+```
 
 Once into the erlang console:
 
@@ -139,19 +144,24 @@ ebus_proc:messages(self()).
 
 > **Note:**
 
-> - You may have noticed that is not necessary additional steps/calls to create/delete a topic,
-    this is automatically handled by `ebus`, so you don't worry about it!
+> You may have noticed that is not necessary additional steps/calls to
+  create/delete a topic, this is automatically handled by `ebus`, so you don't
+  worry about it!
 
 Now, let's make it more fun, start two Erlang consoles, first one:
 
-    $ erl -name node1@127.0.0.1 -setcookie ebus -pa _build/default/lib/*/ebin -s ebus -config test/test.config
+```
+erl -name node1@127.0.0.1 -setcookie ebus -pa _build/default/lib/*/ebin -s ebus -config test/test.config
+```
 
 The second one:
 
-    $ erl -name node2@127.0.0.1 -setcookie ebus -pa _build/default/lib/*/ebin -s ebus -config test/test.config
+```
+erl -name node2@127.0.0.1 -setcookie ebus -pa _build/default/lib/*/ebin -s ebus -config test/test.config
+```
 
-Then what we need to do is put these Erlang nodes in cluster, so from any of them send a ping
-to the other:
+Then what we need to do is put these Erlang nodes in cluster, so from any of
+them send a ping to the other:
 
 ```erlang
 % From node1 ping node2
@@ -159,7 +169,8 @@ net_adm:ping('node2@127.0.0.1').
 pong
 ```
 
-Excellent, we have both nodes in cluster, thanks to the beauty of [Distributed Erlang](http://www.erlang.org/doc/reference_manual/distributed.html).
+Excellent, we have both nodes in cluster, thanks to the beauty of
+[Distributed Erlang](http://www.erlang.org/doc/reference_manual/distributed.html).
 So, let's repeat the above exercise but now in two nodes.
 
 In the `node1` create a handler and subscription to some topic:
@@ -193,8 +204,8 @@ ok
 
 Repeat the same thing above in `node2`.
 
-Once you have handlers subscribed to the same channel in both nodes, publish some messages from
-any node:
+Once you have handlers subscribed to the same channel in both nodes, publish
+some messages from any node:
 
 ```erlang
 % publish message
@@ -219,37 +230,38 @@ ebus:subscribers("foo").
 [<7023.67.0>,<7023.69.0>,<0.70.0>,<0.72.0>]
 ```
 
-You can also check the [TESTS](./test/) for more info about to use `ebus`.
+You can also check the tests for more examples about using `ebus`.
 
 So far, so good! Let's continue!
 
 
 ## Point-To-Point Example
 
-The great thing here is that you don't need something special to implement a point-to-point behavior.
-It is as simple as this:
+The great thing here is that you don't need something special to implement a
+point-to-point behavior. It is as simple as this:
 
 ```erlang
 ebus:dispatch("topic1", #{payload => "M1"}).
 ```
 
-Dispatch function gets the subscribers and then picks one of them to send the message out.
-You can provide a dispatch function to pick up a subscriber, otherwise, a default function
-is provided (picks a subscriber random).
+Dispatch function gets the subscribers and then picks one of them to send the
+message out. You can provide a dispatch function to pick up a subscriber,
+otherwise, a default function is provided (picks a subscriber random).
 
 Dispatch function comes in 3 different flavors:
 
- * `ebus:dispatch/2`: receives the topic and the message.
- * `ebus:dispatch/3`: receives the topic, message and a list of options.
- * `ebus:dispatch/4`: same as previous but receives as 1st argument the name of the server,
-   which is placed by default in the other functions.
+  * `ebus:dispatch/2`: receives the topic and the message.
+  * `ebus:dispatch/3`: receives the topic, message and a list of options.
+  * `ebus:dispatch/4`: same as previous but receives as 1st argument the name of
+    the server, which is placed by default in the other functions.
 
 Dispatch options are:
 
- * `{scope, local | global}`: allows you to choose if you want to pick a local subscriber o any.
-   Default value: `local`.
- * `{dispatch_fun, fun(([term()]) -> term())}`: function to pick up a subscriber.
-   If it isn't provided, a default random function is provided.
+  * `{scope, local | global}`: allows you to choose if you want to pick a local
+    subscriber o any.
+    Default value: `local`.
+  * `{dispatch_fun, fun(([term()]) -> term())}`: function to pick up a
+    subscriber. If it isn't provided, a default random function is provided.
 
 To see how this function is implemented go [HERE](./src/ebus.erl).
 
@@ -297,59 +309,44 @@ ebus_proc:messages(Pid).
 
 Extremely easy isn't?
 
-## Distributed ErlBus
+## Distributed Erlbus
 
-**ErlBus** is distributed by nature, it doesn't require any additional/magical thing.
+**Erlbus** is distributed by nature, it doesn't require any additional/magical
+thing.
 
-Once you have an Erlang cluster, messages are broadcasted using [PG2](http://erlang.org/doc/man/pg2.html),
-which is the default PubSub adapter. Remember, it's a [Phoenix PubSub](https://hexdocs.pm/phoenix/Phoenix.PubSub.html) clone,
-so the architecture and design it's the same.
+Once you have an Erlang cluster, messages are broadcasted using
+[PG2](http://erlang.org/doc/man/pg2.html),
+which is the default PubSub adapter. Remember, it's a [Phoenix PubSub][phx_pubsub]
+clone, so the architecture and design it's the same.
 
-[Phoenix Channels](http://www.phoenixframework.org/docs/channels) are supported on PubSub layer,
-which is the core. Take a look at this [blog post](http://www.phoenixframework.org/blog/the-road-to-2-million-websocket-connections).
+[Phoenix Channels](http://www.phoenixframework.org/docs/channels) are supported
+on PubSub layer, which is the core. Take a look at this
+[blog post](http://www.phoenixframework.org/blog/the-road-to-2-million-websocket-connections).
 
+## Important links
 
-## Examples
-
-See [examples](./examples).
-
+  - [Examples](https://github.com/cabol/erlbus/tree/master/examples).
+  - [WEST](https://github.com/cabol/west).
 
 ## Running Tests
 
-    $ make test
+```
+make test
+```
 
+## Building docs
 
-## Building Edoc
+```
+make docs
+```
 
-    $ make doc
-
-> **Note:** Once you run previous command, a new folder `doc` is created, and you'll have a pretty nice HTML documentation.
-
-
-## ErlBus Profiles
-
-So far, the only additional profile provided is `debug`, because `default` profile is enough
-to do all build and test tasks.
-
-### Debug Profile
-
-**ErlBus** gives you the chance to compile and run `ebus` in debug profile. In this mode,
-additional monitoring, debug and testing dependencies will be fetched:
-
- * [recon](https://github.com/ferd/recon): Collection of functions and scripts to debug Erlang in production.
- * [eper](https://github.com/massemanet/eper): Collection of performance related tools (`redbug`, `dtop`, `ntop`, `atop`).
-
-To run `ebus` with debug profile enabled:
-
-    $ make REBAR_PROFILE=debug shell
-
-Now you can use `recon` and `eper` like you want in order to monitor and debug `ebus`.
-
+> **Note:** Once you run previous command, a new folder `doc` is created,
+  and you'll have a pretty nice HTML documentation.
 
 ## Change Log
 
-All notable changes to this project will be documented in the [CHANGELOG.md](CHANGELOG.md).
-
+All notable changes to this project will be documented in the
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Copyright and License
 
@@ -357,6 +354,6 @@ Original work Copyright (c) 2014 Chris McCord
 
 Modified work Copyright (c) 2016 Carlos Andres Bolaños
 
-**ErlBus** source code is licensed under the [MIT License](LICENSE.md).
+**Erlbus** source code is licensed under the [MIT License](LICENSE).
 
-> **NOTE:**: Pub/Sub implementation was taken from [Phoenix Framework](https://github.com/phoenixframework/phoenix).
+> **NOTE:** Pub/Sub implementation was taken from [Phoenix Framework](https://github.com/phoenixframework/phoenix).

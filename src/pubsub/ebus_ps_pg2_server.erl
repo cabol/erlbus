@@ -31,7 +31,7 @@
 %%% API
 %%%===================================================================
 
--spec start_link(atom()) -> gen:start_ret().
+-spec start_link(atom()) -> gen_server:start_ret().
 start_link(Name) ->
   gen_server:start_link({local, Name}, ?MODULE, Name, []).
 
@@ -39,17 +39,12 @@ start_link(Name) ->
   atom(), pos_integer(), pid(), binary(), any()
 ) -> ok | {error, no_such_group}.
 broadcast(Name, PoolSize, FromPid, Topic, Msg) ->
-  case pg2:get_members(pg2_namespace(Name)) of
-    {error, {no_such_group, _}} ->
-      {error, no_such_group};
-    Pids when is_list(Pids) ->
-      lists:foreach(fun
-        (Pid) when node(Pid) == node() ->
-          ebus_ps_local:broadcast(Name, PoolSize, FromPid, Topic, Msg);
-        (Pid) ->
-          Pid ! {forward_to_local, FromPid, PoolSize, Topic, Msg}
-      end, Pids)
-  end.
+  lists:foreach(fun
+    (Pid) when node(Pid) == node() ->
+      ebus_ps_local:broadcast(Name, PoolSize, FromPid, Topic, Msg);
+    (Pid) ->
+      Pid ! {forward_to_local, FromPid, PoolSize, Topic, Msg}
+  end, ebus_ps_pg:get_members(Name)).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -57,9 +52,7 @@ broadcast(Name, PoolSize, FromPid, Topic, Msg) ->
 
 %% @hidden
 init(Name) ->
-  PG2Namespace = pg2_namespace(Name),
-  ok = pg2:create(PG2Namespace),
-  ok = pg2:join(PG2Namespace, self()),
+  ok = ebus_ps_pg:join(Name, self()),
   {ok, Name}.
 
 %% @hidden
@@ -86,10 +79,3 @@ terminate(_Reason, _State) ->
 %% @hidden
 code_change(_OldVsn, State, _Extra) ->
   {ok, State}.
-
-%%%===================================================================
-%%% Internal functions
-%%%===================================================================
-
-%% @private
-pg2_namespace(ServerName) -> {ebus, ServerName}.

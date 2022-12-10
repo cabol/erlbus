@@ -1,7 +1,5 @@
 -module(ebus_dist_SUITE).
 
--include_lib("common_test/include/ct.hrl").
-
 %% Common Test
 -export([
   all/0,
@@ -10,7 +8,17 @@
 ]).
 
 %% Tests
--export([t_pubsub/1, t_dispatch/1]).
+-export([
+  t_pubsub/1,
+  t_dispatch/1
+]).
+
+-define(SLAVES, [
+  'a@127.0.0.1',
+  'b@127.0.0.1',
+  'c@127.0.0.1',
+  'd@127.0.0.1'
+]).
 
 %%%===================================================================
 %%% Common Test
@@ -19,13 +27,17 @@
 all() -> [t_pubsub, t_dispatch].
 
 init_per_suite(Config) ->
-  ebus:start(),
-  Nodes = start_slaves([a, b, c, d]),
-  [{nodes, Nodes} | Config].
+  {ok, PeerNodes} = ebus_dist_cluster:start(?SLAVES),
+  _ = ebus:start(),
+  [{nodes, ?SLAVES}, {peer_nodes, PeerNodes} | Config].
 
 end_per_suite(Config) ->
-  ebus:stop(),
-  stop_slaves([a, b, c, d]),
+  % get config properties
+  ConfigMap = maps:from_list(Config),
+  PeerNodes = maps:get(peer_nodes, ConfigMap),
+
+  _ = ebus:stop(),
+  _ = ebus_dist_cluster:stop(PeerNodes),
   Config.
 
 %%%===================================================================
@@ -35,7 +47,7 @@ end_per_suite(Config) ->
 t_pubsub(Config) ->
   % get config properties
   ConfigMap = maps:from_list(Config),
-  #{nodes := Nodes} = ConfigMap,
+  Nodes = maps:get(nodes, ConfigMap),
 
   % check topics
   [] = ebus:local_topics(),
@@ -48,6 +60,10 @@ t_pubsub(Config) ->
   NodePidL = spawn_remote_pids(Nodes),
   sub_remote_pids(NodePidL, <<"T1">>),
 
+  ebus_common:wait_until(fun() ->
+    length(ebus_ps_pg:get_members(ebus_ps)) =:= 5
+  end),
+
   % check topics
   [<<"T1">>] = ebus:local_topics(),
   [<<"T1">>] = ebus:topics(),
@@ -58,22 +74,18 @@ t_pubsub(Config) ->
 
   % check local process received message
   <<"hello">> = ebus_proc:wait_for_msg(5000),
-  [] = ebus_proc:messages(self()),
 
   % check remote processes received message
-  L1 = lists:duplicate(4, [<<"hello">>]),
-  L1 = r_process_messages(NodePidL),
+  Nodes = wait_for_reemote_msg(Nodes, <<"hello">>),
+  [] = ebus_proc:messages(self()),
 
   % publish message
   ebus:pub_from(self(), <<"T1">>, <<"hello">>),
   timer:sleep(1000),
 
-  % check local process didn't receive message
-  [] = ebus_proc:messages(self()),
-
   % check remote processes received message
-  L2 = lists:duplicate(4, [<<"hello">>, <<"hello">>]),
-  L2 = r_process_messages(NodePidL),
+  Nodes = wait_for_reemote_msg(Nodes, <<"hello">>),
+  [] = ebus_proc:messages(self()),
 
   % check subscribers
   Self = self(),
@@ -88,14 +100,13 @@ t_pubsub(Config) ->
   ebus:pub(<<"T1">>, <<"hello">>),
   timer:sleep(1000),
 
-  % check
+  % check local
   <<"hello">> = ebus_proc:wait_for_msg(5000),
+
+  % check remotes
+  Nodes1 = tl(Nodes),
+  Nodes1 = wait_for_reemote_msg(Nodes1, <<"hello">>),
   [] = ebus_proc:messages(self()),
-  L3 = [
-    [<<"hello">>, <<"hello">>]
-    | lists:duplicate(3, [<<"hello">>, <<"hello">>, <<"hello">>])
-  ],
-  L3 = r_process_messages(NodePidL),
 
   % check subscribers
   [Self] = ebus:local_subscribers(<<"T1">>),
@@ -111,7 +122,6 @@ t_pubsub(Config) ->
   % check
   <<"foo">> = ebus_proc:wait_for_msg(5000),
   [] = ebus_proc:messages(self()),
-  L3 = r_process_messages(NodePidL),
 
   % check topics
   [<<"T1">>, <<"T2">>] = ebus:local_topics(),
@@ -128,7 +138,7 @@ t_pubsub(Config) ->
 t_dispatch(Config) ->
   % get config properties
   ConfigMap = maps:from_list(Config),
-  #{nodes := Nodes} = ConfigMap,
+  Nodes = maps:get(nodes, ConfigMap),
 
   % check dispatch
   try ebus:dispatch("foo", <<"M1">>)
@@ -147,40 +157,39 @@ t_dispatch(Config) ->
 
   % dispatch
   ok = ebus:dispatch("foo", <<"M1">>),
+
   timer:sleep(1000),
 
   % check local process received message
   <<"M1">> = ebus_proc:wait_for_msg(5000),
+
+  % check remote processes didn't receive message
   [] = ebus_proc:messages(self()),
 
-  % check remote processes received message
-  L1 = lists:duplicate(4, []),
-  L1 = r_process_messages(NodePidL),
-
   % dispatch global with default dispatch_fun
+  Enum = lists:seq(1, 50),
   lists:foreach(fun(_) ->
     ok = ebus:dispatch("foo", <<"M2">>, [{scope, global}])
-  end, lists:seq(1, 500)),
+  end, Enum),
+
   timer:sleep(1500),
 
-  % check remote processes received message
-  % from 500 sent messages, each remote process should have received
-  % at least one message
-  L2 = r_process_messages(NodePidL),
-  lists:foreach(fun(L) -> true = length(L) > 0 end, L2),
+  % check processes received at least one message
+  Result = wait_for_reemote_msg(Enum, <<"M2">>, 1),
+  Result = lists:usort([node() | Nodes]),
 
   % dispatch fun
   [S1 | _] = ebus:subscribers("foo"),
-  MsgsS1 = length(ebus_proc:r_messages(S1)),
+  ExpectedNode = node(S1),
   Fun = fun([H | _]) -> H end,
+  Enum = lists:seq(1, 50),
   lists:foreach(fun(_) ->
-    ok = ebus:dispatch(
+    ebus:dispatch(
       "foo", <<"M3">>,
-      [{scope, global}, {dispatch_fun, Fun}])
-  end, lists:seq(1, 100)),
-  timer:sleep(1500),
-  MsgsS11 = MsgsS1 + 100,
-  MsgsS11 = length(ebus_proc:r_messages(S1)),
+      [{scope, global}, {dispatch_fun, Fun}]
+    )
+  end, Enum),
+  [ExpectedNode] = wait_for_reemote_msg(Enum, <<"M3">>, 1),
 
   ct:print("\e[1;1m t_dispatch: \e[0m\e[32m[OK] \e[0m"),
   ok.
@@ -189,40 +198,12 @@ t_dispatch(Config) ->
 %% Internal functions
 %%==============================================================================
 
-start_slaves(Slaves) ->
-  start_slaves(Slaves, []).
-
-start_slaves([], Acc) ->
-  lists:usort(Acc);
-start_slaves([Node | T], Acc) ->
-  ErlFlags = "-pa ../../lib/*/ebin -config ../../../../config/test.config",
-  {ok, HostNode} = ct_slave:start(Node, [
-    {kill_if_fail, true},
-    {monitor_master, true},
-    {init_timeout, 3000},
-    {startup_timeout, 3000},
-    {startup_functions, [{ebus, start, []}]},
-    {erl_flags, ErlFlags}
-  ]),
-  ct:print("\e[36m ---> Node ~p \e[32m[OK] \e[0m", [HostNode]),
-  pong = net_adm:ping(HostNode),
-  start_slaves(T, [HostNode | Acc]).
-
-stop_slaves(Slaves) ->
-  stop_slaves(Slaves, []).
-
-stop_slaves([], Acc) ->
-  lists:usort(Acc);
-stop_slaves([Node | T], Acc) ->
-  {ok, Name} = ct_slave:stop(Node),
-  ct:print("\e[36m ---> Node ~p \e[31m[STOPPED] \e[0m", [Name]),
-  pang = net_adm:ping(Node),
-  stop_slaves(T, [Node | Acc]).
-
 spawn_remote_pids(RemoteNodes) ->
-  {ResL, _} = rpc:multicall(
-    RemoteNodes, ebus_proc, spawn_timer_fun, [infinity]
-  ),
+  Fun = fun(Msg, Pid) ->
+    Pid ! {node(), Msg}
+  end,
+
+  {ResL, []} = rpc:multicall(RemoteNodes, ebus_proc, spawn_handler, [Fun, [self()]]),
   lists:zip(RemoteNodes, ResL).
 
 sub_remote_pids(RemotePids, Topic) ->
@@ -235,5 +216,16 @@ unsub_remote_pids(RemotePids, Topic) ->
     ok = rpc:call(Node, ebus, unsub, [Pid, Topic])
   end, RemotePids).
 
-r_process_messages(RemotePids) ->
-  [ebus_proc:r_messages(Pid) || {_, Pid} <- RemotePids].
+wait_for_reemote_msg(Enum, Msg) ->
+  wait_for_reemote_msg(Enum, Msg, 5000).
+
+wait_for_reemote_msg(Enum, Msg, Timeout) ->
+  lists:usort([
+    begin
+      case ebus_proc:wait_for_msg(Timeout) of
+        {Ni, Msg} -> Ni;
+        Msg -> node()
+      end
+    end
+    || _Elem <- Enum
+  ]).

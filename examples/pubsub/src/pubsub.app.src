@@ -2,7 +2,7 @@
 
 {application, pubsub,
  [
-  {description, "ErlBus Pub/Sub example."},
+  {description, "Erlbus Pub/Sub example."},
   {vsn, "1"},
   {modules, []},
   {registered, []},

@@ -28,6 +28,7 @@ logs
 data
 *.sh
 edoc
+/priv/plts
 priv/*.so
 *.crashdump
 *_plt

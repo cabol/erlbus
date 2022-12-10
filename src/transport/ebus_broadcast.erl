@@ -8,14 +8,6 @@
 %%% Type definitions
 %%%===================================================================
 
-%% @type broadcast() =
-%% #{
-%%   topic   => binary() | nil,
-%%   event   => binary() | nil,
-%%   payload => term(),
-%%   ebus_t  => broadcast
-%% }.
-%%
 %% Defines a message sent from pubsub to channels and vice-versa.
 %% The message format requires the following keys:
 %% <ul>
@@ -24,14 +16,14 @@
 %% <li>`event': The binary event name, for example `<<"ebus_join">>'.</li>
 %% <li>`payload': The message payload.</li>
 %% </ul>
--type broadcast() :: #{
+-type t() :: #{
   topic   => binary() | nil,
   event   => binary() | nil,
   payload => term(),
   ebus_t  => broadcast
 }.
 
--export_type([broadcast/0]).
+-export_type([t/0]).
 
 %%%===================================================================
 %%% API
@@ -49,7 +41,7 @@ new(Topic) ->
 new(Topic, Event) ->
   new(Topic, Event, nil).
 
--spec new(binary() | nil, binary() | nil, term()) -> broadcast().
+-spec new(binary() | nil, binary() | nil, term()) -> t().
 new(Topic, Event, Payload)
     when (is_binary(Topic) orelse Topic =:= nil)
     andalso (is_binary(Event) orelse Event =:= nil) ->
@@ -60,7 +52,7 @@ new(Topic, Event, Payload)
     ebus_t  => broadcast
   }.
 
--spec from_map(map()) -> broadcast().
+-spec from_map(map()) -> t().
 from_map(Map) ->
   BinKey = fun(K, V, Acc) -> Acc#{ebus_common:to_bin(K) => V} end,
   BinMap = maps:fold(BinKey, #{}, Map),

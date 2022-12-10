@@ -9,6 +9,7 @@
 -export([keyfind/2, keyfind/3, rand_elem/1]).
 -export([build_name/1, build_name/2]).
 -export([to_bin/1, to_atom/1, to_int/1, to_float/1, to_list/1]).
+-export([wait_until/1, wait_until/2, wait_until/3]).
 
 %%%===================================================================
 %%% API
@@ -116,3 +117,28 @@ to_list(Data) when is_pid(Data); is_reference(Data); is_tuple(Data) ->
   integer_to_list(erlang:phash2(Data));
 to_list(Data) ->
   Data.
+
+%% @equiv wait_until(Fun, 50)
+wait_until(Fun) ->
+  wait_until(Fun, 50).
+
+%% @equiv wait_until(Fun, Retries, 100)
+wait_until(Fun, Retries) ->
+  wait_until(Fun, Retries, 100).
+
+-spec wait_until(fun(), non_neg_integer(), timeout()) -> term().
+wait_until(Fun, 0, _Timeout) ->
+  Fun();
+wait_until(Fun, Retries, Timeout) ->
+  case Fun() of
+    true ->
+      true;
+
+    false ->
+      ok = timer:sleep(Timeout),
+      wait_until(Fun, decr_retries(Retries), Timeout)
+  end.
+
+%% @private
+decr_retries(infinity) -> infinity;
+decr_retries(Val) when is_integer(Val), Val > 0 -> Val - 1.

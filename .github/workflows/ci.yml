@@ -1,0 +1,73 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: 'Erlbus Test on OTP ${{ matrix.otp }} and ${{ matrix.os }}'
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - otp: '25.x'
+            os: 'ubuntu-latest'
+            xref: true
+            dialyzer: true
+          - otp: '24.x'
+            os: 'ubuntu-latest'
+          - otp: '23.x'
+            os: 'ubuntu-20.04'
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      OTP_VERSION: ${{ matrix.otp }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install OTP and Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: ${{ matrix.otp }}
+
+      - name: Cache deps
+        uses: actions/cache@v3
+        with:
+          path: |
+            _build
+          key: |
+            ${{ runner.os }}-${{ matrix.otp }}-build-${{ hashFiles(format('rebar.lock')) }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.otp }}-build-
+
+      - name: Compile
+        run: make compile
+
+      - name: Tests
+        run: make test
+
+      - name: Xref
+        run: make xref
+        if: ${{ matrix.xref }}
+
+      - name: Restore PLT Cache
+        uses: actions/cache@v3
+        id: plt-cache
+        with:
+          path: priv/plts
+          key: ${{ runner.os }}-${{ matrix.otp }}-plt-v1
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.otp }}-plt-v1
+        if: ${{ matrix.dialyzer }}
+
+      - name: Dialyzer
+        run: make dialyzer
+        if: ${{ matrix.dialyzer && steps.plt-cache.outputs.cache-hit != 'true' }}

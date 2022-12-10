@@ -1,7 +1,5 @@
 -module(ebus_ps_local_SUITE).
 
--include_lib("common_test/include/ct.hrl").
-
 %% Common Test
 -export([
   all/0,

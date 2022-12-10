@@ -55,16 +55,22 @@ init([Server, PoolSize, DispatchRules]) ->
   % Define a dispatch table so we don't have to go through
   % a bottleneck to get the instruction to perform.
   Server = ets:new(Server, [set, named_table, {read_concurrency, true}]),
-  true = ets:insert(Server, {subscribe, ebus_ps_local, [Server, PoolSize]}),
-  true = ets:insert(Server, {unsubscribe, ebus_ps_local, [Server, PoolSize]}),
-  true = ets:insert(Server, {subscribers, ebus_ps_local, [Server, PoolSize]}),
-  true = ets:insert(Server, {list, ebus_ps_local, [Server, PoolSize]}),
-  true = ets:insert(Server, DispatchRules),
+
+  % Store metadata
+  true =
+    ets:insert(Server, [
+      {subscribe, ebus_ps_local, [Server, PoolSize]},
+      {unsubscribe, ebus_ps_local, [Server, PoolSize]},
+      {subscribers, ebus_ps_local, [Server, PoolSize]},
+      {list, ebus_ps_local, [Server, PoolSize]}
+      | DispatchRules
+    ]),
 
   ChildrenFun = fun(Shard) ->
     LocalShardName = ebus_ps_local:local_name(Server, Shard),
     GCShardName    = ebus_ps_local:gc_name(Server, Shard),
-    true = ets:insert(Server, {Shard, {LocalShardName, GCShardName}}),
+
+    true = ets:insert(Server, {Shard, LocalShardName, GCShardName}),
 
     ShardChildren = [
       ebus_supervisor_spec:worker(ebus_ps_gc, [GCShardName, LocalShardName]),
@@ -77,6 +83,7 @@ init([Server, PoolSize, DispatchRules]) ->
       #{id => Shard}
     )
   end,
+
   Children = [ChildrenFun(C) || C <- lists:seq(0, PoolSize - 1)],
 
   ebus_supervisor_spec:supervise(Children, #{strategy => one_for_one}).

@@ -1,9 +1,0 @@
-language: erlang
-otp_release:
-  - 21.0
-  - 20.3
-  - 19.3
-before_script:
-  - epmd -daemon
-script:
-  - make ci

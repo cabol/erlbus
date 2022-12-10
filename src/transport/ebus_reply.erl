@@ -8,15 +8,6 @@
 %%% Type definitions
 %%%===================================================================
 
-%% @type reply() =
-%% #{
-%%   topic   => binary() | nil,
-%%   status  => atom(),
-%%   payload => term(),
-%%   ref     => binary() | nil,
-%%   ebus_t  => reply
-%% }.
-%%
 %% Defines a reply sent from channels to transports.
 %% The message format requires the following keys:
 %% <ul>
@@ -26,7 +17,7 @@
 %% <li>`payload': The message payload.</li>
 %% <li>`ref': The unique binary ref.</li>
 %% </ul>
--type reply() :: #{
+-type t() :: #{
   topic   => binary() | nil,
   status  => atom(),
   payload => term(),
@@ -34,7 +25,7 @@
   ebus_t  => reply
 }.
 
--export_type([reply/0]).
+-export_type([t/0]).
 
 %%%===================================================================
 %%% API
@@ -56,7 +47,7 @@ new(Topic, Status) ->
 new(Topic, Status, Payload) ->
   new(Topic, Status, Payload, nil).
 
--spec new(binary() | nil, atom(), term(), binary() | nil) -> reply().
+-spec new(binary() | nil, atom(), term(), binary() | nil) -> t().
 new(Topic, Status, Payload, Ref)
     when (is_binary(Topic) orelse Topic =:= nil) andalso is_atom(Status) ->
   #{
@@ -67,7 +58,7 @@ new(Topic, Status, Payload, Ref)
     ebus_t  => reply
   }.
 
--spec from_map(map()) -> reply().
+-spec from_map(map()) -> t().
 from_map(Map) ->
   BinKey = fun(K, V, Acc) -> Acc#{ebus_common:to_bin(K) => V} end,
   BinMap = maps:fold(BinKey, #{}, Map),
